@@ -1,0 +1,36 @@
+{
+  "name": "polis",
+  "private": true,
+  "version": "0.1.0",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": "^20.19.0 || >=22.12.0"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "headless": "tsx scripts/headless.ts",
+    "smoke": "tsx scripts/smoke.ts",
+    "genmap": "tsx scripts/genmap.ts",
+    "tournament": "tsx scripts/tournament.ts",
+    "chronicle": "tsx scripts/chronicle.ts",
+    "mapimage": "tsx scripts/mapimage.ts",
+    "highlights": "tsx scripts/highlights.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.115.0",
+    "simplex-noise": "^4.0.3",
+    "three": "^0.166.1"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.1",
+    "@types/three": "^0.166.0",
+    "tsx": "^4.16.0",
+    "typescript": "^5.5.3",
+    "vite": "^8.1.5",
+    "yaml": "^2.9.0"
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "name": "kilnspire-ledger",
+  "premise": "The great central massif split this land into a rim of green coasts and one soot-blackened city that learned to eat stone. Kilnspire's forges supply nearly every beam, blade, and brick on the continent — but its terraces grow almost nothing, and its people are always three missed grain shipments from famine. The lowland cities whisper about a food cartel; Kilnspire whispers back about what happens when the ore stops flowing.",
+  "seed": 424242,
+  "gridSize": 96,
+  "productionPerCapita": 0.2,
+  "cities": [
+    {
+      "name": "Brinemark",
+      "site": {
+        "x": 15,
+        "y": 9
+      },
+      "produces": [
+        "food",
+        "energy"
+      ],
+      "lore": "A cold-water fishing republic on the northern shore, rich in salted cod and tidal mills. Proud, prosperous, and acutely aware that every roof beam in the city was bought from Kilnspire."
+    },
+    {
+      "name": "Kilnspire",
+      "site": {
+        "x": 89,
+        "y": 43
+      },
+      "produces": [
+        "materials",
+        "energy"
+      ],
+      "lore": "Carved into the eastern face of the massif, its foundries never cool and its granaries never fill. Kilnspire sells the world its bones and buys back its bread — and it never forgets a short delivery."
+    },
+    {
+      "name": "Emberfall",
+      "site": {
+        "x": 13,
+        "y": 67
+      },
+      "produces": [
+        "energy",
+        "food"
+      ],
+      "lore": "Western highlanders who tapped the geothermal seams under their plateau and farm the misty valleys below. They light half the continent and own not a single quarry."
+    },
+    {
+      "name": "Greyharrow",
+      "site": {
+        "x": 61,
+        "y": 89
+      },
+      "produces": [
+        "food",
+        "materials"
+      ],
+      "lore": "A southern breadbasket at the mountain's foot, running a modest quarry it insists is 'just for local use.' Everyone knows Greyharrow could undercut Kilnspire tomorrow — if it dared."
+    }
+  ],
+  "designNotes": "The arena is built around a near-monopoly with a soft underbelly. Kilnspire is the only serious materials producer, so Brinemark and Emberfall must court it or starve for stone — but Kilnspire itself grows no food and must buy from Brinemark or Greyharrow, so its leverage is real but never safe. Greyharrow is the deliberate wildcard: its secondary materials output is too small to replace Kilnspire outright, but large enough to keep one defector alive, making it the kingmaker in any embargo. The natural fault lines: the three lowland cities can cartel food to bring Kilnspire to heel, but Greyharrow profits most from breaking that cartel; Kilnspire can divide-and-rule with materials pricing, but any overreach pushes its customers toward Greyharrow's quarry. At productionPerCapita 0.20 the world is tight — a two-front betrayal kills, so every threat has to be priced against the risk of mutual collapse. Expect shifting 3-vs-1 coalitions with Greyharrow deciding which side the '3' is on.",
+  "generator": {
+    "model": "claude-fable-5",
+    "date": "2026-07-25T17:06:29.266Z"
+  }
+}

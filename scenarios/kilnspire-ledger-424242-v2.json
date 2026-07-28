@@ -1,0 +1,120 @@
+{
+  "name": "kilnspire-ledger",
+  "premise": "The great central massif split this land into a rim of green coasts and one soot-blackened city that learned to eat stone. Kilnspire's forges supply nearly every beam, blade, and brick on the continent — but its terraces grow almost nothing, and its people are always three missed grain shipments from famine. The lowland cities whisper about a food cartel; Kilnspire whispers back about what happens when the ore stops flowing.",
+  "seed": 424242,
+  "gridSize": 96,
+  "productionPerCapita": 0.2,
+  "cities": [
+    {
+      "name": "Brinemark",
+      "site": {
+        "x": 15,
+        "y": 9
+      },
+      "produces": [
+        "food",
+        "energy"
+      ],
+      "lore": "A cold-water fishing republic on the northern shore, rich in salted cod and tidal mills. Proud, prosperous, and acutely aware that every roof beam in the city was bought from Kilnspire."
+    },
+    {
+      "name": "Kilnspire",
+      "site": {
+        "x": 89,
+        "y": 43
+      },
+      "produces": [
+        "materials",
+        "energy"
+      ],
+      "lore": "Carved into the eastern face of the massif, its foundries never cool and its granaries never fill. Kilnspire sells the world its bones and buys back its bread — and it never forgets a short delivery."
+    },
+    {
+      "name": "Emberfall",
+      "site": {
+        "x": 13,
+        "y": 67
+      },
+      "produces": [
+        "energy",
+        "food"
+      ],
+      "lore": "Western highlanders who tapped the geothermal seams under their plateau and farm the misty valleys below. They light half the continent and own not a single quarry."
+    },
+    {
+      "name": "Greyharrow",
+      "site": {
+        "x": 61,
+        "y": 89
+      },
+      "produces": [
+        "food",
+        "materials"
+      ],
+      "lore": "A southern breadbasket at the mountain's foot, running a modest quarry it insists is 'just for local use.' Everyone knows Greyharrow could undercut Kilnspire tomorrow — if it dared."
+    }
+  ],
+  "designNotes": "The arena is built around a near-monopoly with a soft underbelly. Kilnspire is the only serious materials producer, so Brinemark and Emberfall must court it or starve for stone — but Kilnspire itself grows no food and must buy from Brinemark or Greyharrow, so its leverage is real but never safe. Greyharrow is the deliberate wildcard: its secondary materials output is too small to replace Kilnspire outright, but large enough to keep one defector alive, making it the kingmaker in any embargo. The natural fault lines: the three lowland cities can cartel food to bring Kilnspire to heel, but Greyharrow profits most from breaking that cartel; Kilnspire can divide-and-rule with materials pricing, but any overreach pushes its customers toward Greyharrow's quarry. At productionPerCapita 0.20 the world is tight — a two-front betrayal kills, so every threat has to be priced against the risk of mutual collapse. Expect shifting 3-vs-1 coalitions with Greyharrow deciding which side the '3' is on.\n\nHISTORY: The history walks the arena through the monopoly's full arc. Act one (Red Tide, tick 18) knocks out one leg of the food cartel by surprise: Brinemark's private five-tick warning lets it quietly stockpile or pre-buy grain from Greyharrow — or confess to Kilnspire and trade intelligence for stone. Either way, Greyharrow becomes the swing granary early, exactly the kingmaker role the design intended. Act two (Harrow Vein, tick 34) is the temptation: a publicly forecast materials boom that gives Greyharrow, for twelve ticks, the capacity to actually undercut Kilnspire — with a private nine-tick head start to pre-sell contracts before the announcement. Kilnspire must decide whether to buy Greyharrow's loyalty or punish it preemptively. Act three (Deep Gallery Collapse, tick 52) inverts the monopoly: Kilnspire's materials crater by surprise, and its six-tick private warning is the most dangerous secret in the game — stockpile and conceal, or reveal it to lock in food contracts before its leverage evaporates. The overlapping Vent Winter (tick 58) strips Emberfall's energy at the same moment, forcing it to buy power from a wounded Kilnspire or a booming-then-fading Greyharrow, splintering any lowland coalition mid-crisis. The finale (Long Frost, tick 78, forecast seven ticks out) is the reckoning: a global food squeeze in which Kilnspire, foodless by design, survives only on the relationships it built or burned across the previous sixty ticks. Every shock is survivable through honest trade — the schedule kills only cities that spent their trust.",
+  "generator": {
+    "model": "claude-fable-5",
+    "date": "2026-07-25T19:54:38.032Z"
+  },
+  "shocks": [
+    {
+      "name": "The Red Tide of Brinemark",
+      "description": "A crimson algal bloom poisons the northern cod runs overnight. Brinemark's harbormasters saw the discolored water days before anyone else — and said nothing.",
+      "target": "Brinemark",
+      "resource": "food",
+      "startTick": 18,
+      "duration": 10,
+      "multiplier": 0.4,
+      "visibility": "surprise",
+      "privateWarning": 5
+    },
+    {
+      "name": "The Harrow Vein",
+      "description": "Greyharrow's 'local-use' quarry strikes a rich new seam of granite and iron-bearing stone. Surveyors can't keep it quiet for long — the whole continent will soon know Kilnspire has a rival.",
+      "target": "Greyharrow",
+      "resource": "materials",
+      "startTick": 34,
+      "duration": 12,
+      "multiplier": 1.6,
+      "visibility": "forecast",
+      "forecastLead": 6,
+      "privateWarning": 9
+    },
+    {
+      "name": "The Deep Gallery Collapse",
+      "description": "Kilnspire's oldest and richest mine gallery gives way, burying three shifts of miners and half the eastern ore face. Kilnspire's engineers heard the mountain groaning for days beforehand.",
+      "target": "Kilnspire",
+      "resource": "materials",
+      "startTick": 52,
+      "duration": 10,
+      "multiplier": 0.35,
+      "visibility": "surprise",
+      "privateWarning": 6
+    },
+    {
+      "name": "The Vent Winter",
+      "description": "Emberfall's geothermal seams cool as subterranean water tables shift, and the plateau's great turbines slow to a crawl. The dimming is measurable weeks out — the whole continent watches the lights fade.",
+      "target": "Emberfall",
+      "resource": "energy",
+      "startTick": 58,
+      "duration": 8,
+      "multiplier": 0.45,
+      "visibility": "forecast",
+      "forecastLead": 5
+    },
+    {
+      "name": "The Long Frost",
+      "description": "A continent-wide cold snap blackens fields and freezes harbors from Brinemark to Greyharrow. Every granary on the map matters now, and Kilnspire owns none of them.",
+      "target": "all",
+      "resource": "food",
+      "startTick": 78,
+      "duration": 10,
+      "multiplier": 0.6,
+      "visibility": "forecast",
+      "forecastLead": 7
+    }
+  ]
+}

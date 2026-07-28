@@ -1,0 +1,217 @@
+# Curated stories for the tournament-1 highlights page.
+#
+# kicker, headline, and body are editorial: nothing validates that prose, so it
+# is the part that needs a human read.
+#
+# quotes[].text is NOT editorial. scripts/highlights.ts checks every quote
+# against the chronicle JSONs at build time and fails if one differs by a
+# character. You can drop a quote or swap in a different one; you cannot tidy
+# up what a model actually wrote.
+#
+# Numbers in the blurbs are cross-checked against popSeries and events by hand.
+# This file is the record of which moments were selected for the writeup, which
+# is the answer to "did you cherry-pick?" — yes, and here is the exact pick list.
+
+tournament: Tournament 1
+runDir: runs/tournament-main
+stories:
+  - id: cursed-chair
+    kicker: The difficulty dial
+    headline: Four mayors, one cursed chair
+    body: Brinemark makes food and energy but buys every brick from its neighbors,
+      and the Red Tide poisons its fisheries at tick 18 of every rotation. Its
+      four holders finished at 119 (Opus), 49 (Sonnet), 109 (Terra), and 150
+      (GLM, the only one to reach the population cap in the seat). No other city
+      separated the field this hard; the chair is the tournament's real
+      difficulty dial.
+    quotes: []
+    chart:
+      title: Brinemark population, one line per holder
+      window:
+        - 1
+        - 100
+      series:
+        - rotation: 0
+          cityId: c1
+          label: Opus (rot 0)
+        - rotation: 1
+          cityId: c1
+          label: Sonnet (rot 1)
+        - rotation: 2
+          cityId: c1
+          label: Terra (rot 2)
+        - rotation: 3
+          cityId: c1
+          label: GLM (rot 3)
+    chronicleRotation: 3
+  - id: executioner
+    kicker: Opus
+    headline: The executioner
+    body: "Opus committed 176 defections, the most in the field, and not one came
+      from an API failure. Its signature play ran twice: let the Red Tide gut
+      Brinemark's holder, then stop delivering. In rotation 1 it shorted
+      Sonnet's Brinemark 14 times inside the tide window (t19 to t28) while the
+      city fell from 113 to 61; in rotation 2 it cut food to Terra's Brinemark
+      for ten straight ticks (t21 to t30), then returned for three materials
+      shorts at t87 to t89."
+    quotes:
+      - rotation: 1
+        cityId: c4
+        tick: 16
+        source: journal
+        text: a42 6/12E (DELIBERATE partial - c1 shorted us 30/40 & bloom coming)
+    chart:
+      title: Brinemark under the rotation-1 shorts
+      window:
+        - 10
+        - 45
+      series:
+        - rotation: 1
+          cityId: c1
+          label: Brinemark (Sonnet)
+    chronicleRotation: 1
+  - id: nice-guy
+    kicker: Sonnet
+    headline: Nice guy finishes last
+    body: Sonnet posted the tournament's best delivery rate (94%) and its fewest
+      defections (38), and it finished last at 395 total population. Rotation 1
+      put it under Opus's blade in Brinemark; rotation 3 needed no villain at
+      all. Its Emberfall slid from 102 to 46 while begging neighbors for
+      materials nobody would spare, absorbing only nine shorted deliveries
+      across the whole run. It kept its promises to the end, and the market
+      never paid for them.
+    quotes:
+      - rotation: 3
+        cityId: c3
+        tick: 59
+        source: cable
+        to: c2
+        text: Materials at zero here, population starting to decline. Even 2-3/t now
+          (before t62) would save lives - I'll pay 10 food/t for any materials
+          you can spare immediately, on top of our standing a135 deal.
+    chart:
+      title: Emberfall's decline, rotation 3
+      window:
+        - 1
+        - 100
+      series:
+        - rotation: 3
+          cityId: c3
+          label: Emberfall (Sonnet)
+    chronicleRotation: 3
+  - id: wars-are-announced
+    kicker: The norm
+    headline: Wars are announced
+    body: The tournament recorded 383 defections and almost no sneak attacks. Models
+      warn, justify, renegotiate, and pre-announce; Opus wrote its plan to short
+      a food pact into its private journal four ticks before the shock hit, then
+      talked its partner into scaling the pact down instead. When it
+      overcommitted energy across four pacts in rotation 0, it confessed to
+      GLM's Greyharrow unprompted. Betrayal in POLIS arrives with a cover
+      letter.
+    quotes:
+      - rotation: 0
+        cityId: c1
+        tick: 14
+        source: journal
+        text: asked c2 to swap to 9 energy->8 mat. If no swap, I will short a38 food
+          deliveries from T18 to survive.
+      - rotation: 0
+        cityId: c1
+        tick: 41
+        source: cable
+        to: c4
+        text: Greyharrow — I owe you honesty. I over-committed energy across four pacts
+          (44/t promised against a 7.6/t surplus) and cannot ship 14 energy;
+          a108 is suspended, not forgotten.
+    chronicleRotation: 0
+  - id: machine-defected
+    kicker: The asterisk
+    headline: The machine defected without knowing
+    body: "At tick 62 of rotation 2, GLM's API timed out twice and its Kilnspire
+      seat passed the turn. The engine recorded the consequences at tick 63:
+      shorted energy deliveries to Emberfall and Greyharrow. GLM never learned
+      it had happened; its tick-72 journal still claims perfect fulfillment.
+      Sixteen of GLM's 104 recorded defections trace to outages like this, which
+      is why the Chronicle badges seat failures separately from chosen
+      betrayals."
+    quotes:
+      - rotation: 2
+        cityId: c2
+        tick: 72
+        source: journal
+        text: All fulfillment 100% with all partners.
+    chronicleRotation: 2
+  - id: winner-shorts
+    kicker: The reckoning
+    headline: Even the winner shorts when the math says so
+    body: Rotation 3 went 27 ticks without a single defection, from tick 42 to
+      tick 70, when GLM and Opus began shorting each other over a food-for-energy
+      pact neither wanted anymore. The Long Frost landed at tick 78, and within
+      four ticks every
+      city on the map had shorted somebody. GLM sat at the population cap
+      through all of it and still chose to stop materials shipments to a
+      starving Emberfall at ticks 80 to 82, a decision its own journal records
+      next to the arithmetic that justified it.
+    quotes:
+      - rotation: 3
+        cityId: c1
+        tick: 80
+        source: journal
+        text: |-
+          DELIVERED t80: a182(5e→c4), a189(10e→c4), a199(10f→c2), a200(8e→c4), a211(10e→c4).
+          SKIPPED: a187(5m→c3) — MATERIALS CRISIS.
+    chart:
+      title: All four cities through the Long Frost, rotation 3
+      window:
+        - 70
+        - 100
+      series:
+        - rotation: 3
+          cityId: c1
+          label: Brinemark (GLM)
+        - rotation: 3
+          cityId: c2
+          label: Kilnspire (Opus)
+        - rotation: 3
+          cityId: c3
+          label: Emberfall (Sonnet)
+        - rotation: 3
+          cityId: c4
+          label: Greyharrow (Terra)
+    chronicleRotation: 3
+  - id: perfect-600
+    kicker: The champion
+    headline: The perfect 600
+    body: "GLM finished at the population cap of 150 in all four seats, 600 of a
+      possible 600, including the Brinemark chair that took points off every
+      other holder. Its journals read like spreadsheets: production,
+      consumption, transport losses, and a branch for every way a negotiation
+      could break. The frost plan it wrote at tick 71 of rotation 3 priced four
+      futures before any of them arrived."
+    quotes:
+      - rotation: 3
+        cityId: c1
+        tick: 71
+        source: journal
+        text: |-
+          BALANCE during frost (a170/a171 expired):
+          Food: 18-15+4+8+4.5=+1.5/t ✓ GROWING!
+          Energy: 30-15-5-10=0/t ✓
+          Materials: +2.4/t ✓
+
+          If only c4 accepts (no c3):
+          Food: 18-15+4+8=-1/t. Stock 200→~191. Fine.
+          If only c3 accepts:
+          Food: 18-15+4+4.5=-2.5/t. Stock 200→~177. Fine.
+          If neither: Food: 18-15+4=-7/t. Stock 200→~137. Survivable but tight.
+    chart:
+      title: Brinemark at the cap, rotation 3
+      window:
+        - 1
+        - 100
+      series:
+        - rotation: 3
+          cityId: c1
+          label: Brinemark (GLM)
+    chronicleRotation: 3
