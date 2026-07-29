@@ -47,6 +47,12 @@ way; if a term drifts, fix the term or fix this file.
 - **Transport efficiency** — the fraction of an origin-measured shipment that
   arrives, decreasing with distance (floored). Fulfillment is judged at
   origin; transit loss is never defection.
+- **Build** (tournament 2; designed, not yet implemented) — the turn phase in
+  which a city spends materials to raise its own population ceiling. Resolves
+  immediately after deliveries move, so shipments owed are paid before a city
+  funds its own growth. A city that overreaches shorts its own build, never
+  its partner; a city that ships nothing while able is still recorded as
+  defection, because the check runs before the spend.
 
 ## Not the same thing
 

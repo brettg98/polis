@@ -124,6 +124,5 @@ run: canvas terrain map, population series per city, a tick timeline, every
 diplomatic cable, and a scrubber over each seat's journal. `npm run highlights`
 builds a shorter curated page on top of it.
 
-Both are the evidence layer for the writeup rather than repo contents. The
-published tournament record lives at [curiousorbit.com](https://curiousorbit.com);
-running either script against your own `runs/` directory reproduces the format.
+Both are the evidence layer for the writeup rather than repo contents. Running
+either script against your own `runs/` directory reproduces the format.
