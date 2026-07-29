@@ -52,7 +52,14 @@ way; if a term drifts, fix the term or fix this file.
   immediately after deliveries move, so shipments owed are paid before a city
   funds its own growth. A city that overreaches shorts its own build, never
   its partner; a city that ships nothing while able is still recorded as
-  defection, because the check runs before the spend.
+  defection, because the check runs before the spend. See ADR-004.
+- **Population ceiling** — the most population a city can reach. Base is
+  `startPopulation × maxGrowthFactor`; Build adds to it. Public: neighbours see
+  that a city has made room to grow. Distinct from the death threshold and the
+  warehouse limit, which Build never moves.
+- **Build progress** — materials banked toward the next ceiling step, held per
+  city until the step's cost is met. Private, like a stockpile. Does not decay,
+  and is never spent without the seat asking that turn.
 
 ## Not the same thing
 

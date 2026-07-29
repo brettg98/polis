@@ -311,6 +311,7 @@ producers is viable but tight. Lower it toward 0.20 for a knife-edge economy.
 - [`docs/ADR-001-goal-and-scope.md`](docs/ADR-001-goal-and-scope.md) — goal and locked decisions
 - [`docs/ADR-002-the-chronicle.md`](docs/ADR-002-the-chronicle.md) — run record and viewer
 - [`docs/ADR-003-shocks-and-distance.md`](docs/ADR-003-shocks-and-distance.md) — shocks, distance model
+- [`docs/ADR-004-expansion.md`](docs/ADR-004-expansion.md) — tournament-2 build phase (designed, not built)
 
 ## Deliberately absent
 

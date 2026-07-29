@@ -65,6 +65,7 @@ src/render/ + src/main.ts (browser only; imports engine, never the reverse)
 - `docs/ADR-001-goal-and-scope.md` — goal, decisions
 - `docs/ADR-002-the-chronicle.md` — chronicle + viewer
 - `docs/ADR-003-shocks-and-distance.md` — shocks, distance model
+- `docs/ADR-004-expansion.md` — tournament-2 build phase (designed, not built)
 - `docs/design.md` — architecture, tuning knobs
 - `docs/llm-seats.md` — seat wiring notes (read before touching adapters)
 - `CONTEXT.md` — glossary / ubiquitous language

@@ -117,13 +117,14 @@ changes would invalidate cross-rotation comparability):
   partner. Costs: clearing mechanism to design/tune, bigger observations,
   more tokens per tick, harder prompt.
 - **Expansion** (materials-funded growth). Spend materials to raise the
-  population cap, rising cost per tier. Fixes an observed measurement
+  population ceiling, rising cost per step. Fixes an observed measurement
   problem: rotation 1 ended with three cities tied at cap 150 — the score
   saturates and the chart loses resolution exactly where it matters.
-  Expansion turns materials into a strategic sink, makes the endgame an
-  investment race, and couples growth to diplomacy (bigger cities depend
-  more on partners). Risks: early-leader snowball, cost-curve tuning,
-  re-validating every scenario's sanity gate. Grill before building.
+  **Designed and locked in ADR-004** (grilled 2026-07-29); not yet built.
+  Build is its own turn phase resolving after deliveries, progress
+  accumulates, the ceiling gets a separate bonus term, and prices are set
+  against the kilnspire-ledger materials economy. Read ADR-004 before
+  implementing — several of the choices are non-obvious.
 - Sequencing if both: expansion first (it improves the headline chart),
   market second (it gives expansion-driven materials demand a place to
   clear).
