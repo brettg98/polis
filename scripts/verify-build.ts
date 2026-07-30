@@ -176,5 +176,39 @@ await runCase({
   check('build events emitted', sim.events.filter((e) => e.kind === 'build').length, 5);
 }
 
+// Case 4 — what a seat is told. The ceiling is public, banked materials are
+// not, and the size bands have to reach past the old hard cap of 150 or a
+// neighbour that doubled looks identical to one that stood still.
+{
+  console.log('\nCase 4: ceiling is visible, banked materials are not');
+  const { sim } = await arena(10);
+  const [a, b] = sim.cities;
+  a.ceilingBonus = 125; // five completed steps
+  a.buildProgress = 40;
+
+  let mine: SeatObservation | undefined;
+  let theirs: SeatObservation | undefined;
+  const capture = new Map<string, Seat>([
+    [a.id, new TestSeat(a.id, (o) => { mine = o; return {}; })],
+    [b.id, new TestSeat(b.id, (o) => { theirs = o; return {}; })],
+  ]);
+
+  a.population = 150;
+  await sim.step(capture);
+  const seenLarge = theirs!.world.cities.find((x) => x.cityId === a.id)!;
+  check('neighbour at 150 reads large', seenLarge.apparentSize === 'large', true);
+
+  a.population = 200;
+  await sim.step(capture);
+  const seenHuge = theirs!.world.cities.find((x) => x.cityId === a.id)!;
+  check('neighbour past 160 reads huge', seenHuge.apparentSize === 'huge', true);
+  check('neighbour sees the ceiling', seenHuge.ceiling, 275);
+  check('neighbour cannot see banked materials', 'buildProgress' in seenHuge, false);
+
+  check('own ceiling', mine!.you.ceiling, 275);
+  check('own banked materials', mine!.you.buildProgress, 40);
+  check('own cost to finish the step', mine!.you.nextStepCost, 135); // 175 - 40
+}
+
 console.log(failures === 0 ? '\nAll cases passed.' : `\n${failures} check(s) failed.`);
 process.exit(failures === 0 ? 0 : 1);
