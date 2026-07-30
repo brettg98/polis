@@ -120,7 +120,17 @@ tournament-1 seats never had** — a city at 150 was never told 150 was the limi
 The neighbour size bands also have to extend upward. Today everything from 115
 up reads as `large` (`sim.ts:286`), so a neighbour at 120 and one at 250 would
 look identical, and a model cannot be nervous about a big neighbour it cannot
-see. Bands become small / medium / large / huge.
+see. Bands become:
+
+| population | reads as |
+|---|---|
+| under 70 | small |
+| under 115 | medium |
+| under 160 | large |
+| 160 and over | huge |
+
+160 sits just above the current hard ceiling of 150, so a neighbour reading
+`huge` has provably built.
 
 ### 5. Prices
 
@@ -159,6 +169,18 @@ fields already in `SEAT_ACTION_SCHEMA`, plus the known-field list in
 `validate.ts`, plus a few lines of rules prompt. The prompt already tells every
 model that growing "raises both your production and your consumption", so the
 trade-off is in the briefing; this adds the lever.
+
+**Scripted seats never build.** `build` is optional on `SeatAction` and
+`ScriptedSeat` omits it. This is not a stub to fill in later — it is what keeps
+the rest of the project honest. `npm run headless` and the genmap sanity gate
+(`scripts/genmap.ts:236-247`) both run honest scripted seats, and that gate is
+what certifies a scenario as survivable by honest cooperators (ADR-003). If
+scripted seats built, every scenario's certification would shift and the
+deterministic headless baselines would move, so a drift there could no longer be
+read as a bug. Keeping them trade-only means gate results must come back
+unchanged after this work lands, which turns the re-certification into a check
+on the engine rather than a chore. It also leaves a scripted lineup usable as a
+trade-only control.
 
 ### 7. Asymmetric access is accepted
 
