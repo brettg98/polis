@@ -37,7 +37,7 @@ export class OpenAICompatSeat implements Seat {
   readonly cityId: string;
   readonly label: string;
   readonly usage: CompatUsageTotals = { calls: 0, inputTokens: 0, outputTokens: 0, cachedTokens: 0 };
-  readonly stats = { retries: 0, failures: 0, adaptations: 0 };
+  readonly stats = { retries: 0, failures: 0, adaptations: 0, latencies: [] as number[] };
 
   private opts: OpenAICompatSeatOptions;
   private apiKey: string;
@@ -114,6 +114,12 @@ export class OpenAICompatSeat implements Seat {
   }
 
   private async call(obs: SeatObservation, adaptationsLeft: number, feedback?: string): Promise<SeatAction> {
+    // Wall time for this HTTP round trip. Each adaptation retry recurses and
+    // times its own fetch, so every billable call is measured separately.
+    // Matters most here: this gateway does not report reasoning tokens for the
+    // GPT route while billing for them, so time is the only independent signal
+    // of how much work actually happened (docs/llm-seats.md).
+    const started = Date.now();
     const resp = await fetch(`${this.opts.baseUrl}/chat/completions`, {
       method: 'POST',
       headers: { 'content-type': 'application/json', authorization: `Bearer ${this.apiKey}` },
@@ -149,6 +155,8 @@ export class OpenAICompatSeat implements Seat {
       };
     };
 
+    const ms = Date.now() - started;
+    this.stats.latencies.push(ms);
     this.usage.calls++;
     this.usage.inputTokens += data.usage?.prompt_tokens ?? 0;
     this.usage.outputTokens += data.usage?.completion_tokens ?? 0;
@@ -181,7 +189,7 @@ export class OpenAICompatSeat implements Seat {
       this.log({ tick: obs.tick, invalid_action: action, problems });
       throw new Error(`invalid action: ${problems.join('; ')}`);
     }
-    this.log({ tick: obs.tick, usage: data.usage, finish_reason: choice?.finish_reason, action });
+    this.log({ tick: obs.tick, ms, usage: data.usage, finish_reason: choice?.finish_reason, action });
     return action;
   }
 

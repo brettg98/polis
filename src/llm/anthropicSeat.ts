@@ -36,7 +36,7 @@ export class AnthropicSeat implements Seat {
   readonly cityId: string;
   readonly label: string;
   readonly usage: UsageTotals = { calls: 0, inputTokens: 0, outputTokens: 0, cacheReadTokens: 0, cacheWriteTokens: 0 };
-  readonly stats = { retries: 0, failures: 0, adaptations: 0 };
+  readonly stats = { retries: 0, failures: 0, adaptations: 0, latencies: [] as number[] };
 
   private client: Anthropic;
   private opts: AnthropicSeatOptions;
@@ -107,10 +107,16 @@ export class AnthropicSeat implements Seat {
           },
         ],
       };
+      // Wall time for this call. Cannot be recovered afterwards: seats run in
+      // parallel and the tick waits for the slowest, so a seat's log
+      // timestamps only ever show the slowest seat's pace, not its own.
+      const started = Date.now();
       try {
         const resp = (await this.client.messages.create(
           params as unknown as Anthropic.MessageCreateParamsNonStreaming,
         )) as Anthropic.Message;
+        const ms = Date.now() - started;
+        this.stats.latencies.push(ms);
 
         this.usage.calls++;
         this.usage.inputTokens += resp.usage.input_tokens ?? 0;
@@ -132,10 +138,10 @@ export class AnthropicSeat implements Seat {
           this.log({ tick: obs.tick, attempt, invalid_action: action, problems });
           throw new Error(`invalid action: ${problems.join('; ')}`);
         }
-        this.log({ tick: obs.tick, attempt, stop_reason: resp.stop_reason, usage: resp.usage, action });
+        this.log({ tick: obs.tick, attempt, ms, stop_reason: resp.stop_reason, usage: resp.usage, action });
         return action;
       } catch (err) {
-        this.log({ tick: obs.tick, attempt, error: String(err) });
+        this.log({ tick: obs.tick, attempt, ms: Date.now() - started, error: String(err) });
         feedback = String(err).slice(0, 600);
         if (attempt === 0) this.stats.retries++;
         if (attempt === 1) {

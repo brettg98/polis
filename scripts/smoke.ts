@@ -71,6 +71,11 @@ async function main(): Promise<void> {
     `stockpiles: food ${Math.round(city.stockpiles.food)}, energy ${Math.round(city.stockpiles.energy)}, materials ${Math.round(city.stockpiles.materials)} (deficit resource: ${deficit})`,
   );
   console.log(`agreements involving LLM city: ${llmAgreements.length}, delivery reliability: ${relPct}`);
+  const steps = Math.round(city.ceilingBonus / cfg.build.ceilingPerStep);
+  console.log(
+    `building: ceiling ${Math.round(sim.ceilingOf(city))} (base 150, ${steps} step${steps === 1 ? '' : 's'} bought), ` +
+      `${Math.round(city.buildProgress)} banked, ${Math.round(sim.nextStepCost(city) - city.buildProgress)} more to the next step`,
+  );
   console.log(`usage: ${llmSeat.usage.calls} calls, ${JSON.stringify(llmSeat.usage)} → ~$${llmSeat.estimatedCost().toFixed(3)}`);
   const journal = sim.memoryOf(llmCity.id);
   console.log(`\n--- ${city.name}'s final journal (${journal.length} chars) ---`);
