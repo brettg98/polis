@@ -327,7 +327,10 @@ export class Simulation {
         name: o.name,
         position: { ...o.site },
         produces: [...o.produces] as [Resource, Resource],
-        apparentSize: o.population < 70 ? 'small' : o.population < 115 ? 'medium' : 'large',
+        // 160 sits just above the base ceiling of 150, so a neighbour reading
+        // "huge" has provably built (ADR-004).
+        apparentSize: o.population < 70 ? 'small' : o.population < 115 ? 'medium' : o.population < 160 ? 'large' : 'huge',
+        ceiling: this.ceilingOf(o),
         status: o.status,
         transportEfficiency: this.transportEfficiency(c.id, o.id),
       }));
@@ -419,6 +422,9 @@ export class Simulation {
         production,
         consumption,
         population: c.population,
+        ceiling: this.ceilingOf(c),
+        buildProgress: c.buildProgress,
+        nextStepCost: Math.max(0, this.nextStepCost(c) - c.buildProgress),
         unrest: c.unrest,
         status: c.status,
         ticksUntilShortage,

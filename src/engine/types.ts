@@ -81,7 +81,10 @@ export interface CityPublicView {
   name: string;
   position: { x: number; y: number };
   produces: [Resource, Resource]; // terrain is visible, so production capability is public
-  apparentSize: 'small' | 'medium' | 'large';
+  apparentSize: 'small' | 'medium' | 'large' | 'huge';
+  // Built and physical, so public (ADR-004): a neighbour can see that a city
+  // has made room to grow. Materials banked toward the next step are private.
+  ceiling: number;
   status: CityStatus;
   transportEfficiency: number; // fraction of an origin-measured shipment that arrives (symmetric)
 }
@@ -141,6 +144,11 @@ export interface SeatObservation {
     production: ResourceSet;
     consumption: ResourceSet;
     population: number;
+    // The most population this city can reach. Tournament-1 seats were never
+    // told this — a city at 150 watched growth stop and had to infer why.
+    ceiling: number;
+    buildProgress: number; // materials banked toward the next ceiling step
+    nextStepCost: number; // materials still needed to complete that step
     unrest: number;
     status: CityStatus;
     ticksUntilShortage: Partial<Record<Resource, number>>;
