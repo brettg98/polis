@@ -13,6 +13,7 @@
     "preview": "vite preview",
     "headless": "tsx scripts/headless.ts",
     "verify:build": "tsx scripts/verify-build.ts",
+    "verify:scenarios": "tsx scripts/verify-scenarios.ts",
     "smoke": "tsx scripts/smoke.ts",
     "genmap": "tsx scripts/genmap.ts",
     "tournament": "tsx scripts/tournament.ts",

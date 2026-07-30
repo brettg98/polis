@@ -28,6 +28,9 @@ decisions: `docs/ADR-001-goal-and-scope.md`.
   (`--startRotation` resumes; a `PAUSE` file in outDir idles between ticks)
 - `npm run genmap` — LLM-authored scenario/map generation
 - `npm run chronicle` — build the Chronicle viewer from run logs
+- `npm run verify:build` — build-phase acceptance cases (no keys, deterministic)
+- `npm run verify:scenarios` — re-certify committed scenarios against the
+  ADR-003 sanity gate; run after any economy or tuning change
 - `npm run typecheck` / `npm run build`
 
 ## Tech stack
@@ -35,13 +38,15 @@ decisions: `docs/ADR-001-goal-and-scope.md`.
 - TypeScript (strict, ESM), Vite for the browser sim, `tsx` for scripts
 - three.js rendering, simplex-noise terrain, `@anthropic-ai/sdk` for
   Anthropic seats; other providers via OpenAI-compatible fetch (no SDK)
-- No test framework: verification is `npm run typecheck` plus deterministic
-  headless runs (same seed, same outcome)
+- No test framework: verification is `npm run typecheck`, the deterministic
+  headless runs (same seed, same outcome), and the `verify:*` scripts. The
+  latter assert named properties and exit non-zero on failure, so they are
+  the closest thing here to a regression suite.
 
 ## Architecture
 
 ```
-scripts/ (headless, smoke, tournament, genmap, chronicle)
+scripts/ (headless, smoke, tournament, genmap, chronicle, verify-*)
    → src/engine/    (headless sim: terrain, cities, economy, RNG, scenarios)
    → src/llm/       (seat adapters, prompt, schema, validation, factory)
    → src/chronicle/ (run capture + HTML viewer)
