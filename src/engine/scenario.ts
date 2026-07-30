@@ -211,5 +211,7 @@ export function citiesFromScenario(s: Scenario, cfg: SimConfig, terrain: Terrain
     stockpiles: { food: startStock, energy: startStock, materials: startStock },
     unrest: 0,
     status: 'alive',
+    buildProgress: 0,
+    ceilingBonus: 0,
   }));
 }

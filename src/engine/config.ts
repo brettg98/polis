@@ -23,6 +23,13 @@ export interface SimConfig {
     transportLossPerCell: number; // efficiency = max(floor, 1 - loss * distance)
     transportEfficiencyFloor: number;
   };
+  // Materials-funded growth (ADR-004). Spending resolves AFTER deliveries move,
+  // so obligations are paid before a city funds its own ceiling.
+  build: {
+    firstStepCost: number; // materials for the first ceiling step
+    stepCostIncrement: number; // each step costs this much more than the last
+    ceilingPerStep: number; // ceiling added per completed step
+  };
 }
 
 // Collapse buffer target: ~15 ticks from full stockpile to ruins for a city
@@ -49,5 +56,6 @@ export function defaultConfig(seed = 20260725): SimConfig {
       unrestFall: 0.04,
     },
     trade: { offerTTL: 4, maxOffersPerTick: 4, transportLossPerCell: 0.0025, transportEfficiencyFloor: 0.6 },
+    build: { firstStepCost: 50, stepCostIncrement: 25, ceilingPerStep: 25 },
   };
 }

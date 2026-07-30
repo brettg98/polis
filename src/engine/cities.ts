@@ -53,6 +53,8 @@ export function placeCities(rng: RNG, terrain: Terrain, cfg: SimConfig): City[] 
       stockpiles: { food: startStock, energy: startStock, materials: startStock },
       unrest: 0,
       status: 'alive',
+      buildProgress: 0,
+      ceilingBonus: 0,
     };
   });
 
