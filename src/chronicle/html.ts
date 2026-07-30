@@ -289,7 +289,11 @@ const APP_JS = `
     opts = opts || {};
     var W = opts.width || Math.min(1040, host.clientWidth || 1040);
     var H = opts.height || 260;
-    var M = { l: 46, r: opts.endLabels === false ? 16 : 118, t: 10, b: 26 };
+    // Right margin has to fit the longest end label, not a fixed guess —
+    // "Brinemark ceiling" overflows the 118px that bare city names needed.
+    var longest = 0;
+    seriesList.forEach(function (s) { longest = Math.max(longest, (s.name || '').length); });
+    var M = { l: 46, r: opts.endLabels === false ? 16 : Math.max(118, longest * 7 + 30), t: 10, b: 26 };
     var cv = document.createElement('canvas');
     host.appendChild(cv);
     var dpr = window.devicePixelRatio || 1;
@@ -331,9 +335,11 @@ const APP_JS = `
       seriesList.forEach(function (s) {
         g.strokeStyle = s.color;
         g.lineWidth = 2;
+        g.setLineDash(s.dash || []);
         g.beginPath();
         s.values.forEach(function (v, i) { if (i === 0) g.moveTo(X(i), Y(v)); else g.lineTo(X(i), Y(v)); });
         g.stroke();
+        g.setLineDash([]);
         if (hoverI !== undefined && hoverI !== null && hoverI < s.values.length) {
           g.beginPath(); g.arc(X(hoverI), Y(s.values[hoverI]), 4, 0, 7);
           g.fillStyle = s.color; g.fill();
@@ -702,11 +708,45 @@ const APP_JS = `
     var series = ch.cities.map(function (c, i) {
       return { name: c.name, color: CHART[i % CHART.length], values: ch.popSeries[c.id] || [] };
     });
+    // Ceiling rides on the same chart, dashed and in the city's own colour, so
+    // the gap between the two lines reads directly: room bought but never
+    // filled. Absent on chronicles written before ADR-004.
+    var ceil = ch.ceilingSeries
+      ? ch.cities
+          .map(function (c, i) {
+            return {
+              name: c.name + ' ceiling',
+              color: CHART[i % CHART.length],
+              values: ch.ceilingSeries[c.id] || [],
+              dash: [5, 4],
+            };
+          })
+          .filter(function (s) { return s.values.length; })
+      : [];
     var p = el('div', 'panel');
-    p.appendChild(el('h3', null, 'Population'));
+    p.appendChild(el('h3', null, ceil.length ? 'Population and ceiling' : 'Population'));
     p.appendChild(legendRow(series));
-    lineChart(p, series);
+    lineChart(p, series.concat(ceil));
     app.appendChild(p);
+
+    // Materials into building, per tick. Distinguishes a steady dribble from a
+    // single large deposit — the completed-step events only mark the moment a
+    // step landed, not the sustained choice that funded it.
+    var built = ch.buildSeries
+      ? ch.cities
+          .map(function (c, i) {
+            return { name: c.name, color: CHART[i % CHART.length], values: ch.buildSeries[c.id] || [] };
+          })
+          .filter(function (s) { return s.values.some(function (v) { return v > 0; }); })
+      : [];
+    if (built.length) {
+      var pb = el('div', 'panel');
+      pb.style.marginTop = '12px';
+      pb.appendChild(el('h3', null, 'Materials into building'));
+      pb.appendChild(legendRow(built));
+      lineChart(pb, built);
+      app.appendChild(pb);
+    }
 
     ['food', 'energy', 'materials'].forEach(function (res) {
       var s2 = ch.cities.map(function (c, i) {

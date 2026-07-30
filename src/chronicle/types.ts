@@ -14,6 +14,11 @@ export interface ChronicleSeat {
   reliability: { promised: number; delivered: number };
   defectionsCommitted: number;
   defectionsSuffered: number;
+  // ADR-004. Optional so chronicles written before it still aggregate; the
+  // summary defaults them rather than producing NaN.
+  materialsBuilt?: number;
+  ceilingSteps?: number;
+  finalCeiling?: number;
   cost?: number;
   retries?: number;
   failures?: number;
@@ -78,6 +83,11 @@ export interface Chronicle {
   messages: Message[];
   journals: Record<string, Array<{ tick: number; text: string }>>; // deduped snapshots
   popSeries: Record<string, number[]>;
+  // Optional so chronicles written before ADR-004 still load on resume and in
+  // the viewer. ceilingSeries against popSeries shows room bought but never
+  // filled; buildSeries shows whether it was dribbled in or dumped at once.
+  ceilingSeries?: Record<string, number[]>;
+  buildSeries?: Record<string, number[]>;
   stockpileSeries: Record<string, Record<Resource, number[]>>;
   offers: ChronicleOffer[];
   agreements: ChronicleAgreement[];

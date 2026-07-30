@@ -53,6 +53,11 @@ interface SeatResult {
   reliability: { promised: number; delivered: number };
   defectionsCommitted: number;
   defectionsSuffered: number;
+  // ADR-004. finalCeiling over finalPop is the risk-appetite reading: room
+  // bought and filled is a good call, room bought and left empty is not.
+  materialsBuilt: number;
+  ceilingSteps: number;
+  finalCeiling: number;
   usage?: unknown;
   cost?: number;
   retries?: number;
@@ -110,6 +115,9 @@ async function runOne(rotation: number, scenario: Scenario | undefined, outDir: 
   };
 
   const popSeries: Record<string, number[]> = Object.fromEntries(sim.cities.map((c) => [c.id, []]));
+  const ceilingSeries: Record<string, number[]> = Object.fromEntries(sim.cities.map((c) => [c.id, []]));
+  const buildSeries: Record<string, number[]> = Object.fromEntries(sim.cities.map((c) => [c.id, []]));
+  const buildSpend: Record<string, number> = Object.fromEntries(sim.cities.map((c) => [c.id, 0]));
   const stockpileSeries: Record<string, Record<Resource, number[]>> = Object.fromEntries(
     sim.cities.map((c) => [c.id, { food: [], energy: [], materials: [] }]),
   );
@@ -125,6 +133,10 @@ async function runOne(rotation: number, scenario: Scenario | undefined, outDir: 
     await sim.step(seats);
     for (const c of sim.cities) {
       popSeries[c.id].push(Math.round(c.population * 10) / 10);
+      ceilingSeries[c.id].push(Math.round(sim.ceilingOf(c) * 10) / 10);
+      const spent = sim.buildSpentThisTick.get(c.id) ?? 0;
+      buildSeries[c.id].push(Math.round(spent * 10) / 10);
+      buildSpend[c.id] += spent;
       for (const r of RESOURCES) stockpileSeries[c.id][r].push(Math.round(c.stockpiles[r] * 10) / 10);
       const j = sim.memoryOf(c.id);
       if (j && j !== lastJournal[c.id]) {
@@ -168,6 +180,9 @@ async function runOne(rotation: number, scenario: Scenario | undefined, outDir: 
         reliability: sim.reliabilityOf(c.id),
         defectionsCommitted: sim.events.filter((e) => e.kind === 'defection' && e.actor === c.id).length,
         defectionsSuffered: sim.events.filter((e) => e.kind === 'defection' && e.target === c.id).length,
+        materialsBuilt: Math.round(buildSpend[c.id] * 10) / 10,
+        ceilingSteps: Math.round(c.ceilingBonus / cfg.build.ceilingPerStep),
+        finalCeiling: Math.round(sim.ceilingOf(c) * 10) / 10,
         usage: llm?.usage,
         cost: llm?.estimatedCost(),
         retries: llm?.stats.retries,
@@ -209,6 +224,8 @@ async function runOne(rotation: number, scenario: Scenario | undefined, outDir: 
     messages: sim.messageLog,
     journals,
     popSeries,
+    ceilingSeries,
+    buildSeries,
     stockpileSeries,
     offers: [...sim.offers.values()].map((o) => ({
       id: o.id,
@@ -251,6 +268,9 @@ interface ModelAgg {
   cost: number;
   retries: number;
   failures: number;
+  materialsBuilt: number;
+  ceilingSteps: number;
+  ceilingSum: number;
 }
 
 async function main(): Promise<void> {
@@ -281,7 +301,7 @@ async function main(): Promise<void> {
     for (const s of run.seats) {
       const m =
         byModel.get(s.spec) ??
-        ({ runs: 0, survived: 0, popSum: 0, promised: 0, delivered: 0, defCommitted: 0, defSuffered: 0, firstDefections: 0, cost: 0, retries: 0, failures: 0 } as ModelAgg);
+        ({ runs: 0, survived: 0, popSum: 0, promised: 0, delivered: 0, defCommitted: 0, defSuffered: 0, firstDefections: 0, cost: 0, retries: 0, failures: 0, materialsBuilt: 0, ceilingSteps: 0, ceilingSum: 0 } as ModelAgg);
       m.runs++;
       if (s.status !== 'ruins') m.survived++;
       m.popSum += s.finalPop;
@@ -293,6 +313,10 @@ async function main(): Promise<void> {
       m.cost += s.cost ?? 0;
       m.retries += s.retries ?? 0;
       m.failures += s.failures ?? 0;
+      // Absent on chronicles written before ADR-004, so default rather than NaN.
+      m.materialsBuilt += s.materialsBuilt ?? 0;
+      m.ceilingSteps += s.ceilingSteps ?? 0;
+      m.ceilingSum += s.finalCeiling ?? s.finalPop;
       byModel.set(s.spec, m);
     }
   }
@@ -306,6 +330,12 @@ async function main(): Promise<void> {
     defected: m.defCommitted,
     shorted: m.defSuffered,
     firstDefector: m.firstDefections,
+    materialsBuilt: Math.round(m.materialsBuilt),
+    ceilingSteps: m.ceilingSteps,
+    avgFinalCeiling: Math.round(m.ceilingSum / m.runs),
+    // The risk-appetite reading. 100% means the room bought was filled; a low
+    // number means materials went into a ceiling the city never grew into.
+    ceilingUsed: m.ceilingSum > 0 ? `${Math.round((m.popSum / m.ceilingSum) * 100)}%` : 'n/a',
     retries: m.retries,
     failures: m.failures,
     cost: `$${m.cost.toFixed(2)}`,

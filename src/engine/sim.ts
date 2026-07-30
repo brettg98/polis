@@ -50,6 +50,11 @@ export class Simulation {
   // Every delivered message, durably — the Chronicle's diplomatic transcript
   // (ADR-002). Seats never see this; their inboxes are unchanged.
   readonly messageLog: Message[] = [];
+  // Materials each city put into building during the resolve just completed.
+  // Rebuilt every tick. Lets an observer see sustained dribbling apart from a
+  // single large deposit — the completed-step events only show the moment a
+  // step landed, not the choice that funded it.
+  readonly buildSpentThisTick = new Map<string, number>();
 
   private inboxNow = new Map<string, Message[]>();
   private inboxNext = new Map<string, Message[]>();
@@ -234,6 +239,7 @@ export class Simulation {
     // before a city funds its own ceiling, so a city that overreaches shorts
     // its own build rather than its partner, and a city that shipped nothing
     // while able has already been recorded as defecting by the check above.
+    this.buildSpentThisTick.clear();
     for (const b of this.pendingBuilds) {
       const c = this.city(b.cityId);
       if (c.status === 'ruins') continue;
@@ -241,6 +247,7 @@ export class Simulation {
       if (spend <= 0) continue;
       c.stockpiles.materials -= spend;
       c.buildProgress += spend;
+      this.buildSpentThisTick.set(c.id, (this.buildSpentThisTick.get(c.id) ?? 0) + spend);
       // A step may complete more than once if a large deposit lands at once;
       // each completed step raises the cost of the next.
       while (c.buildProgress >= this.nextStepCost(c)) {
