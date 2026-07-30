@@ -111,21 +111,29 @@ than overrun. Exact per-provider cost caveats are in
 
 ## Providers and keys
 
-Three routes, resolved in `src/llm/factory.ts`. Export the key for every
-provider your lineup names, or the run fails on the first tick.
+Four routes, resolved in `src/llm/factory.ts`. Export the key for every provider
+your lineup names, or the run fails on the first tick.
 
 | seat spec | goes to | key |
 |---|---|---|
 | `anthropic:<model>` | Anthropic API | `ANTHROPIC_API_KEY` |
+| `zai:<model>` | Z.ai direct | `ZAI_API_KEY` |
 | `opencode:<model>` | OpenCode Zen gateway | `OPENCODE_API_KEY` |
 | `openai:<model>` | OpenAI direct | `OPENAI_API_KEY` |
 | `scripted:honest`, `scripted:opportunist` | no network | none |
 
 Keys are read from environment variables only. They are never committed, never
 written to disk by this project, and never reach the browser. Two adapters cover
-all three routes: the Anthropic SDK, and plain fetch for anything
-OpenAI-compatible. Pointing that second adapter at a fourth gateway is a few
-lines in the factory, but there is no flag for it today.
+every route: the Anthropic SDK, and plain fetch for anything OpenAI-compatible.
+Adding a fifth is a few lines in the factory.
+
+**Why GLM goes direct rather than through the gateway.** The gateway resells at
+the vendor's list price, so it earns nothing on tokens and caps the models that
+consume the most. Measured, that cap allowed about 170 output tokens a minute
+against the ~2,800 a rotation needs, and it stalled four attempted runs. Models
+with a lighter appetite never approach it — GPT averages ~688 output tokens per
+call against GLM's ~4,669 — so they stay on the gateway. See
+[docs/llm-seats.md](docs/llm-seats.md).
 
 ## 2. Run one model
 

@@ -15,6 +15,11 @@ export interface OpenAICompatSeatOptions {
   model: string;
   baseUrl: string; // e.g. https://opencode.ai/zen/v1 or https://api.openai.com/v1
   apiKeyEnv: string; // env var holding the key (resolved at launch, never stored)
+  // Deliberation budget, the counterpart to AnthropicSeat's `effort`. Fairness
+  // rule (docs/llm-seats.md): identical across seats, or the comparison
+  // measures how long a provider is willing to think rather than how well.
+  // Dropped automatically if a provider rejects it.
+  reasoningEffort?: 'none' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh' | 'max';
   maxTokensPerCall?: number;
   tokenBudget?: number;
   logFile?: string;
@@ -43,6 +48,7 @@ export class OpenAICompatSeat implements Seat {
   private apiKey: string;
   private mode: 'json_schema' | 'json_object' = 'json_schema';
   private tokenParam: 'max_tokens' | 'max_completion_tokens' = 'max_tokens';
+  private sendEffort = true; // cleared if the provider rejects reasoning_effort
   private budgetWarned = false;
 
   constructor(cityId: string, opts: OpenAICompatSeatOptions) {
@@ -105,6 +111,7 @@ export class OpenAICompatSeat implements Seat {
       // 16K default: reasoning models (GLM) spend hidden reasoning from this
       // budget and were truncating mid-JSON at 8K. Identical across seats.
       [this.tokenParam]: this.opts.maxTokensPerCall ?? 16000,
+      ...(this.sendEffort && this.opts.reasoningEffort ? { reasoning_effort: this.opts.reasoningEffort } : {}),
       response_format: responseFormat,
       messages: [
         { role: 'system', content: this.systemPrompt() },
@@ -142,6 +149,16 @@ export class OpenAICompatSeat implements Seat {
           this.log({ tick: obs.tick, adapted: 'json_object' });
           return this.call(obs, adaptationsLeft - 1, feedback);
         }
+        // Only GLM 5.2 documents reasoning_effort on Z.ai, and older models
+        // elsewhere may reject it. Drop it rather than fail the seat — but log
+        // it, because a seat running without an effort cap is not playing
+        // under the same rules as the others.
+        if (this.sendEffort && /reasoning_effort/i.test(errText)) {
+          this.sendEffort = false;
+          this.stats.adaptations++;
+          this.log({ tick: obs.tick, adapted: 'reasoning_effort dropped (rejected by provider)' });
+          return this.call(obs, adaptationsLeft - 1, feedback);
+        }
       }
       throw new Error(`HTTP ${resp.status}: ${errText}`);
     }
@@ -173,14 +190,23 @@ export class OpenAICompatSeat implements Seat {
     try {
       action = JSON.parse(content) as SeatAction;
     } catch (err) {
+      // Content that isn't even JSON means response_format was ignored
+      // outright — the provider returned prose or a markdown-fenced block.
+      // Observed on Z.ai direct, which accepts json_schema with a 200 and
+      // discards it. Adapt here too, or the parse throws before the
+      // validation branch below is ever reached and the seat never learns.
+      if (this.mode === 'json_schema') {
+        this.mode = 'json_object';
+        this.stats.adaptations++;
+        this.log({ tick: obs.tick, adapted: 'json_object (schema ignored, output unparseable)' });
+      }
       this.log({ tick: obs.tick, parse_error: String(err), finish_reason: choice?.finish_reason, usage: data.usage, content_head: content.slice(0, 200) });
       throw new Error(`unparseable content (finish_reason: ${choice?.finish_reason}): ${String(err)}`);
     }
     const problems = validateSeatAction(action);
     if (problems.length) {
-      // A validation failure under json_schema mode means the gateway silently
-      // ignored response_format — switch to schema-in-prompt for the rest of
-      // the run so the model actually sees the shape.
+      // Valid JSON of the wrong shape means the schema was accepted but not
+      // enforced — observed on the gateway's GPT route. Same remedy.
       if (this.mode === 'json_schema') {
         this.mode = 'json_object';
         this.stats.adaptations++;
