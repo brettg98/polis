@@ -68,6 +68,33 @@ constants in `config.trade`); quantities and fulfillment are origin-measured,
 so transit loss is never defection; per-counterparty efficiency is in every
 observation.
 
+## Building (ADR-004)
+
+Cities spend materials to raise their own population ceiling. Steps cost 50
+materials then 25 more each time; each adds 25 ceiling. Progress accumulates,
+and a seat must ask every tick — no standing order, no decay, no refund.
+
+**The phase resolves after deliveries move**, which is the load-carrying
+decision. Deliveries are only a written promise until the next resolve, so a
+build that spent during the action phase would let a city empty its warehouse
+and have a deliberate broken promise scored as misfortune (the defection test
+at `sim.ts` requires the shorting city to still hold 3× what it owed).
+Resolving after deliveries makes overreach short the city's own build and
+leaves willful shorting correctly recorded, with no change to the detector.
+
+`ceilingOf()` adds the bonus to the ceiling and to nothing else. The storage
+limit and the death threshold stay anchored to `startPopulation` on purpose —
+raising those alongside would make an expanded city easier to kill,
+retroactively, from a number it cannot see. Fragility instead emerges: storage
+is fixed while consumption rises with population, so a bigger city holds
+proportionally less cushion.
+
+Ceiling is public, banked progress is private. Scripted seats never build,
+which is what keeps `npm run headless` and the genmap sanity gate certifying
+the same thing they certified before; `npm run verify:scenarios` asserts it.
+
+Knobs in `config.build`. Verification: `npm run verify:build`.
+
 ## The Chronicle (ADR-002)
 
 Per rotation, the runner writes a Chronicle: complete post-hoc record
@@ -116,18 +143,9 @@ changes would invalidate cross-rotation comparability):
   embargoing city uses the market to cover its own needs while starving a
   partner. Costs: clearing mechanism to design/tune, bigger observations,
   more tokens per tick, harder prompt.
-- **Expansion** (materials-funded growth). Spend materials to raise the
-  population ceiling, rising cost per step. Fixes an observed measurement
-  problem: rotation 1 ended with three cities tied at cap 150 — the score
-  saturates and the chart loses resolution exactly where it matters.
-  **Designed and locked in ADR-004** (grilled 2026-07-29); not yet built.
-  Build is its own turn phase resolving after deliveries, progress
-  accumulates, the ceiling gets a separate bonus term, and prices are set
-  against the kilnspire-ledger materials economy. Read ADR-004 before
-  implementing — several of the choices are non-obvious.
-- Sequencing if both: expansion first (it improves the headline chart),
-  market second (it gives expansion-driven materials demand a place to
-  clear).
+- **Expansion** — **built**, see "Building (ADR-004)" below. Was the first
+  of these two; the spot market would give expansion-driven materials demand
+  somewhere to clear, so it stays the natural next one.
 
 Tournament-3 candidate (considered 2026-07-26, deferred): **weapons, as a
 controlled comparison — never blended in.** The design is the experiment:

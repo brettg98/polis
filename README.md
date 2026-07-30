@@ -199,7 +199,7 @@ directory makes the runner idle between ticks until you remove it.
 
 | file | what it is |
 |---|---|
-| `summary.json` | per-model standings. **The headline result.** |
+| `summary.json` | per-model standings. **The headline result.** Includes `ceilingUsed`, final population over final ceiling, which separates a model that filled the room it bought from one that spent materials on a ceiling it never reached. |
 | `chronicle.html` | the Chronicle viewer, self-contained. **Open this first.** |
 | `run-rot<N>.json` | per-rotation outcomes, seat assignment, population series, events |
 | `chronicle-rot<N>.json` | per-rotation record the viewer is built from |
@@ -246,23 +246,53 @@ which, and a one-word change shows up as a one-line diff.
 
 ## How a tick works
 
-1. **RESOLVE** — deliveries promised last tick land, then production,
-   consumption, starvation, collapse. Deterministic, no models involved.
+1. **RESOLVE** — deliveries promised last tick land, then build spending, then
+   production, consumption, starvation, collapse. Deterministic, no models
+   involved.
 2. **OBSERVE** — the engine builds a private view per seat and hands each one
-   only its own. Stockpiles and exact population are private; terrain, and
-   therefore production capability, is public. There is no server anywhere in
-   this project; the fog of war is enforced inside the simulation process.
+   only its own. Stockpiles, exact population, and banked build materials are
+   private; terrain, and therefore production capability, is public, as is a
+   city's population ceiling. There is no server anywhere in this project; the
+   fog of war is enforced inside the simulation process.
 3. **ACT** — every living seat returns one action: messages, offers,
-   accept/reject responses, deliveries, and a journal string fed back to it
-   verbatim next tick as its only memory.
+   accept/reject responses, deliveries, materials to put toward its ceiling,
+   and a journal string fed back to it verbatim next tick as its only memory.
 4. **APPLY** — offers registered, acceptances matched into agreements starting
-   two ticks later, promised deliveries queued for the next resolve.
+   two ticks later, promised deliveries and build spending queued for the next
+   resolve.
 
 All seats act simultaneously and blind to each other's commits.
 
 The engine also supports embargoes, but they are deliberately absent from the
 model-facing schema (`src/llm/schema.ts`), so the tournament-1 lineup was never
 offered that action. Adding it would change what is being measured.
+
+## Building
+
+A city can spend materials to raise its own population ceiling. Steps cost 50
+materials, then 75, then 100, and so on; each adds 25 to the ceiling. Materials
+accumulate until a step is paid for, and a seat has to ask every tick it wants
+to spend — there is no standing order.
+
+**Building spends from the same pile deliveries ship from, and it spends after
+the shipments go out.** That ordering is the whole design. A city that promises
+more than it can afford shorts its own build rather than its partner, and a
+city that ships nothing while its warehouse is full is still recorded as
+defecting, because the check runs before the spend. Neither outcome needed a
+special rule; both fall out of where the phase sits in the tick.
+
+A raised ceiling is not extra population. The city still grows into it at ~1%
+per tick, so a ceiling bought late is one it never fills. And the storage limit
+does not move, so a larger city holds proportionally less cushion: 20 ticks of
+cover at population 100, 13 at 150, 11 at 175. That is the whole downside of
+expanding, and it comes out of the economy rather than a penalty we wrote.
+
+A city's ceiling is public. What it has banked toward the next step is not, so
+saving up is private until the step completes and announcing it is a choice.
+
+This was absent from tournament 1, which is why that run's populations pile up
+against the 150 cap. Design and rejected alternatives:
+[docs/ADR-004-expansion.md](docs/ADR-004-expansion.md).
 
 ## Fairness
 
@@ -301,6 +331,19 @@ here.
 about 2.2x one city's consumption, so a world where one resource has only two
 producers is viable but tight. Lower it toward 0.20 for a knife-edge economy.
 
+`build` sets what growth costs: `firstStepCost` (50), `stepCostIncrement` (25),
+and `ceilingPerStep` (25). Price these against the world you are running, not
+in the abstract. In `kilnspire-ledger` production is exactly double
+consumption, so a producer's spare materials equal exactly one city's appetite
+and transport loss then tips the whole map about 6 materials a turn short of
+keeping everyone at 150. There is no spare production to build from there, so
+building comes out of the warehouse — which is what makes it a bet rather than
+a formality. A looser world would need higher prices to stay interesting.
+
+After changing any of this, run `npm run verify:scenarios`. It replays the
+ADR-003 sanity gate against every committed world and tells you whether honest
+cooperators still survive the shock schedule.
+
 ## Docs
 
 - [`CONTEXT.md`](CONTEXT.md) — glossary
@@ -319,6 +362,11 @@ Raids and military action, espionage, resource decay, migration, and free-text
 negotiation subrounds before commit. The seat protocol already carries the
 message plumbing for the last one. All of these fit the seat model later without
 touching the tick protocol.
+
+The published tournament-1 results predate building, so they were played
+without it. Comparing a run with building against that table is not a fair
+comparison: the available actions and the rules prompt both changed. Tag
+`v0.1.0` is the trade-only ruleset those results came from.
 
 ## License
 
