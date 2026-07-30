@@ -19,6 +19,11 @@ export interface City {
   unrest: number;
   status: CityStatus;
   collapsedTick?: number;
+  // Materials-funded growth (ADR-004). `ceilingBonus` adds to the population
+  // ceiling only — it never moves the warehouse limit or the death threshold,
+  // both of which stay anchored to startPopulation.
+  buildProgress: number; // materials banked toward the next ceiling step
+  ceilingBonus: number; // ceiling added by completed steps
 }
 
 export interface ResourceQty {
@@ -58,7 +63,7 @@ export interface Message {
   text: string;
 }
 
-export type EventKind = 'pact' | 'collapse' | 'shortage' | 'defection' | 'embargo' | 'shock' | 'info';
+export type EventKind = 'pact' | 'collapse' | 'shortage' | 'defection' | 'embargo' | 'shock' | 'build' | 'info';
 
 export interface WorldEvent {
   tick: number;
@@ -156,6 +161,10 @@ export interface SeatAction {
   offers?: { to: string; give: ResourceQty; receive: ResourceQty; duration: number }[];
   responses?: { offerId: string; decision: 'accept' | 'reject' }[];
   deliveries?: { agreementId: string; qty: number }[];
+  // Materials to put toward the ceiling this turn (ADR-004). Optional on the
+  // type so scripted seats simply omit it — they never build, which keeps the
+  // genmap sanity gate certifying exactly what it certified before.
+  build?: number;
   policies?: { embargo?: string[] };
   memory?: string;
 }

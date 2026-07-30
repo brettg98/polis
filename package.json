@@ -12,6 +12,7 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "headless": "tsx scripts/headless.ts",
+    "verify:build": "tsx scripts/verify-build.ts",
     "smoke": "tsx scripts/smoke.ts",
     "genmap": "tsx scripts/genmap.ts",
     "tournament": "tsx scripts/tournament.ts",

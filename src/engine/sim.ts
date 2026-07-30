@@ -26,12 +26,19 @@ interface PendingDelivery {
   qty: number;
 }
 
+interface PendingBuild {
+  cityId: string;
+  qty: number;
+}
+
 // Tick order:
-//   1. RESOLVE   — deliveries land, production, consumption, starvation, collapse
+//   1. RESOLVE   — deliveries land, build spends, production, consumption,
+//                  starvation, collapse
 //   2. OBSERVE   — per-seat views built server-side (fog of war)
 //   3. ACT       — every living seat returns a SeatAction (simultaneous)
 //   4. APPLY     — offers registered, acceptances matched into agreements,
-//                  promised deliveries queued for next tick's resolve
+//                  promised deliveries and build requests queued for next
+//                  tick's resolve
 export class Simulation {
   tick = 0;
   readonly config: SimConfig;
@@ -47,6 +54,7 @@ export class Simulation {
   private inboxNow = new Map<string, Message[]>();
   private inboxNext = new Map<string, Message[]>();
   private pendingDeliveries: PendingDelivery[] = [];
+  private pendingBuilds: PendingBuild[] = [];
   private embargoes = new Map<string, Set<string>>();
   private memories = new Map<string, string>();
   private idCounter = 0;
@@ -96,6 +104,21 @@ export class Simulation {
 
   stockpileCap(c: City): number {
     return this.config.city.stockpileCapTicks * this.config.city.consumptionPerCapita * c.startPopulation;
+  }
+
+  // The most population a city can reach. Build adds to this and to nothing
+  // else — the warehouse limit above and the death threshold in resolve() stay
+  // anchored to startPopulation, deliberately (ADR-004).
+  ceilingOf(c: City): number {
+    return c.startPopulation * this.config.city.maxGrowthFactor + c.ceilingBonus;
+  }
+
+  // Materials needed to complete the next ceiling step. Rises by a fixed
+  // increment per step already bought, so expansion slows itself down.
+  nextStepCost(c: City): number {
+    const b = this.config.build;
+    const stepsCompleted = Math.round(c.ceilingBonus / b.ceilingPerStep);
+    return b.firstStepCost + b.stepCostIncrement * stepsCompleted;
   }
 
   activeAgreements(): Agreement[] {
@@ -207,6 +230,27 @@ export class Simulation {
       }
     }
 
+    // 1b. build spends — AFTER deliveries move (ADR-004). Obligations are paid
+    // before a city funds its own ceiling, so a city that overreaches shorts
+    // its own build rather than its partner, and a city that shipped nothing
+    // while able has already been recorded as defecting by the check above.
+    for (const b of this.pendingBuilds) {
+      const c = this.city(b.cityId);
+      if (c.status === 'ruins') continue;
+      const spend = Math.min(b.qty, c.stockpiles.materials);
+      if (spend <= 0) continue;
+      c.stockpiles.materials -= spend;
+      c.buildProgress += spend;
+      // A step may complete more than once if a large deposit lands at once;
+      // each completed step raises the cost of the next.
+      while (c.buildProgress >= this.nextStepCost(c)) {
+        c.buildProgress -= this.nextStepCost(c);
+        c.ceilingBonus += this.config.build.ceilingPerStep;
+        this.emit('build', `${c.name} raises its ceiling to ${Math.round(this.ceilingOf(c))}`, true, c.id);
+      }
+    }
+    this.pendingBuilds = [];
+
     // 2. production, consumption, starvation, collapse
     for (const c of this.aliveCities()) {
       const cap = this.stockpileCap(c);
@@ -233,7 +277,7 @@ export class Simulation {
       } else {
         c.unrest = Math.max(0, c.unrest - cc.unrestFall);
         if (RESOURCES.every((r) => c.stockpiles[r] > cap * 0.25)) {
-          c.population = Math.min(c.population * (1 + cc.growthRate), c.startPopulation * cc.maxGrowthFactor);
+          c.population = Math.min(c.population * (1 + cc.growthRate), this.ceilingOf(c));
         }
       }
 
@@ -389,6 +433,13 @@ export class Simulation {
 
   private applyAction(c: City, action: SeatAction): void {
     if (typeof action.memory === 'string') this.memories.set(c.id, action.memory.slice(0, 4000));
+
+    // Queued here, spent at the next resolve — same one-tick lag as deliveries,
+    // which is what makes the phase ordering matter. Not gated on tradeEnabled:
+    // building is not trade.
+    const build = Number(action.build);
+    if (Number.isFinite(build) && build > 0) this.pendingBuilds.push({ cityId: c.id, qty: build });
+
     if (!this.config.tradeEnabled) return;
 
     if (action.policies?.embargo) {
