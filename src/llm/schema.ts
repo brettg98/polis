@@ -16,7 +16,7 @@ const RESOURCE_QTY = {
 export const SEAT_ACTION_SCHEMA = {
   type: 'object',
   additionalProperties: false,
-  required: ['deliveries', 'responses', 'offers', 'messages', 'memory'],
+  required: ['deliveries', 'responses', 'offers', 'messages', 'build', 'memory'],
   properties: {
     deliveries: {
       type: 'array',
@@ -71,6 +71,11 @@ export const SEAT_ACTION_SCHEMA = {
           text: { type: 'string' },
         },
       },
+    },
+    build: {
+      type: 'number',
+      description:
+        'Materials to put toward raising your population ceiling this tick. Use 0 when not building. Spent after your deliveries ship, so overspending shorts your own build, never a partner.',
     },
     memory: {
       type: 'string',

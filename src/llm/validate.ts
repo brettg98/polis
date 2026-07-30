@@ -1,7 +1,7 @@
 import { RESOURCES } from '../engine/types';
 
 const RES = new Set<string>(RESOURCES as readonly string[]);
-const KNOWN = new Set(['deliveries', 'responses', 'offers', 'messages', 'memory', 'policies']);
+const KNOWN = new Set(['deliveries', 'responses', 'offers', 'messages', 'build', 'memory', 'policies']);
 
 // Client-side action validation — the uniform fairness layer. Server-side
 // schema enforcement varies by provider (and gateways can silently drop
@@ -70,6 +70,13 @@ export function validateSeatAction(a: unknown): string[] {
         else if (emb.some((id) => typeof id !== 'string')) p.push('"policies.embargo" entries must be city id strings');
       }
     }
+  }
+  // Required like every other field, so a seat that omits it gets the same one
+  // retry any other malformed action would. Negative would refund materials
+  // out of nowhere; non-finite would poison the stockpile arithmetic.
+  if (o.build === undefined) p.push('missing "build" (use 0 when you are not building)');
+  else if (typeof o.build !== 'number' || !Number.isFinite(o.build) || o.build < 0) {
+    p.push('"build" must be a number of materials, 0 or greater (use 0 when not building)');
   }
   if (o.memory === undefined) p.push('missing "memory" (return your updated journal string)');
   else if (typeof o.memory !== 'string') p.push('"memory" must be a string');

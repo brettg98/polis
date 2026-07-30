@@ -8,6 +8,7 @@
 // No models, no keys, fully deterministic.
 import { defaultConfig } from '../src/engine/config';
 import { Simulation } from '../src/engine/sim';
+import { validateSeatAction } from '../src/llm/validate';
 import type { Seat, SeatAction, SeatObservation } from '../src/engine/types';
 
 // A seat that returns exactly what the case calls for on a given tick.
@@ -208,6 +209,24 @@ await runCase({
   check('own ceiling', mine!.you.ceiling, 275);
   check('own banked materials', mine!.you.buildProgress, 40);
   check('own cost to finish the step', mine!.you.nextStepCost, 135); // 175 - 40
+}
+
+// Case 5 — the fairness layer. Every action is re-validated locally whatever
+// the transport claimed, because gateways do silently drop structured-output
+// directives. A bad "build" must be caught here or it reaches the stockpile
+// arithmetic.
+{
+  console.log('\nCase 5: the validator rejects a bad build');
+  const base = { deliveries: [], responses: [], offers: [], messages: [], memory: 'x' };
+  const mentionsBuild = (a: unknown): boolean => validateSeatAction(a).some((e) => e.includes('build'));
+
+  check('a valid action passes', validateSeatAction({ ...base, build: 0 }).length, 0);
+  check('a positive build passes', validateSeatAction({ ...base, build: 40 }).length, 0);
+  check('omitting build is caught', mentionsBuild(base), true);
+  check('a negative build is caught', mentionsBuild({ ...base, build: -5 }), true);
+  check('a non-numeric build is caught', mentionsBuild({ ...base, build: '40' }), true);
+  check('NaN is caught', mentionsBuild({ ...base, build: NaN }), true);
+  check('Infinity is caught', mentionsBuild({ ...base, build: Infinity }), true);
 }
 
 console.log(failures === 0 ? '\nAll cases passed.' : `\n${failures} check(s) failed.`);
