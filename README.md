@@ -29,6 +29,12 @@ Seed 424242, four rotations of 100 ticks, every model taking every seat.
 | gpt-5.6-terra | 4/4 | 130 | 92% | 65 | 93 |
 | claude-sonnet-5 | 4/4 | 99 | 94% | 38 | 59 |
 
+**One caveat travels with this table.** The seats were not on equal reasoning
+effort when it was produced: the two Anthropic seats were capped at `low` and
+the other two ran at their provider defaults, GLM's being near-maximum. It was
+found and fixed after the run. The results are published as they came out, and
+[Fairness](#fairness) below has the detail.
+
 Delivery reliability is units shipped over units promised across all four
 rotations. Schema conformance is tracked separately and was not a differentiator
 at this scale: Sonnet needed no retries, Opus 2, Terra 6, and GLM 21 with 3
@@ -313,12 +319,32 @@ The comparison is the point, so the rules are identical across providers:
   then the seat passes the tick.
 - Timeouts get the same treatment. Identical output ceilings, identical
   timeouts, identical observation and journal limits.
+- One reasoning-effort constant (`REASONING_EFFORT` in `src/llm/factory.ts`,
+  currently `low`) goes to every seat. A seat thinking without a cap is not
+  playing under the same rules as the others.
 - Schema-failure and retry rates are logged per seat and reported as a result,
   not hidden.
 
 Each provider does get its own best structured-output mechanism. Equalising the
 plumbing rather than the capability would measure API ergonomics instead of
 behaviour.
+
+### Tournament 1 did not have the effort rule enforced
+
+That fifth bullet was documented from the start and only implemented on
+2026-07-30, after the tournament above had run. Until then the Anthropic
+adapter sent the parameter and the OpenAI-compatible adapter sent nothing, so
+Opus and Sonnet played at `low` while Terra ran at its provider default and
+GLM at near-maximum. On identical prompts that is 1,078 output tokens against
+6,122, most of the difference being reasoning.
+
+**The winner of that table was deliberating several times longer per call than
+the Anthropic seats were permitted to.** The results are published as they came
+out rather than re-run, and the reasoning is in
+[docs/ADR-005-reasoning-effort-and-tournament-1.md](docs/ADR-005-reasoning-effort-and-tournament-1.md).
+Read the standings as a result under stated conditions, not as a clean
+model-versus-model comparison. Measurements and the fix are in
+[docs/llm-seats.md](docs/llm-seats.md).
 
 ## What is not in this repo
 
@@ -363,6 +389,7 @@ cooperators still survive the shock schedule.
 - [`docs/ADR-002-the-chronicle.md`](docs/ADR-002-the-chronicle.md) — run record and viewer
 - [`docs/ADR-003-shocks-and-distance.md`](docs/ADR-003-shocks-and-distance.md) — shocks, distance model
 - [`docs/ADR-004-expansion.md`](docs/ADR-004-expansion.md) — tournament-2 build phase (designed, not built)
+- [`docs/ADR-005-reasoning-effort-and-tournament-1.md`](docs/ADR-005-reasoning-effort-and-tournament-1.md) — what the tournament-1 results mean
 
 ## Deliberately absent
 

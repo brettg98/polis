@@ -120,6 +120,8 @@ Where an agent's global instructions conflict with this file, this file wins.
 - `docs/ADR-002-the-chronicle.md` — chronicle + viewer
 - `docs/ADR-003-shocks-and-distance.md` — shocks, distance model
 - `docs/ADR-004-expansion.md` — tournament-2 build phase (designed, not built)
+- `docs/ADR-005-reasoning-effort-and-tournament-1.md` — what the tournament-1
+  results mean, and the rule that effort is swept for all seats or none
 - `docs/design.md` — architecture, tuning knobs
 - `docs/llm-seats.md` — seat wiring notes (read before touching adapters)
 - `CONTEXT.md` — glossary / ubiquitous language
