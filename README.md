@@ -319,6 +319,11 @@ The comparison is the point, so the rules are identical across providers:
   then the seat passes the tick.
 - Timeouts get the same treatment. Identical output ceilings, identical
   timeouts, identical observation and journal limits.
+- The retry waits when the failure looks transient — a rate limit, a 5xx, a
+  dropped connection — honouring `Retry-After` or pausing 5s, capped at 20s.
+  One shared policy (`src/llm/backoff.ts`) rather than one per adapter, since
+  a longer grace period for one vendor is an advantage. A malformed action
+  retries immediately; waiting would not improve it.
 - One reasoning-effort constant (`REASONING_EFFORT` in `src/llm/factory.ts`,
   currently `low`) goes to every seat. A seat thinking without a cap is not
   playing under the same rules as the others.

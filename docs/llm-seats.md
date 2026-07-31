@@ -115,6 +115,15 @@ together large enough to reverse the bottom of the table.
 - Malformed action → validation errors fed back for exactly one retry, then
   the seat passes the tick (no action, journal preserved).
 - Timeouts get the same one-retry-then-pass treatment.
+- **Same retry timing.** When the first attempt failed for a reason a pause
+  might fix — HTTP 429, 5xx, a timeout, a dropped connection — the retry waits
+  before going again: `Retry-After` when the provider sends one, otherwise 5s,
+  capped at 20s so one sick provider cannot stall a tick every other seat is
+  waiting on. A malformed or unparseable action retries immediately, because
+  waiting does not improve it. Both adapters call `retryDelayMs` in
+  `src/llm/backoff.ts`; the policy lives in one file so a longer grace period
+  cannot drift into one provider's path. This changes the timing of the second
+  attempt, never the count, so the one-retry rule above still holds.
 - Same observation schema, same journal cap, same max tokens per call.
 - **Same reasoning effort.** One `REASONING_EFFORT` constant in `factory.ts`
   (currently `low`) is sent to every seat: as `effort` to the Anthropic SDK and

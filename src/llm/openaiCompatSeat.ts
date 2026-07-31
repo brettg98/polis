@@ -4,6 +4,7 @@ import type { Seat, SeatAction, SeatObservation } from '../engine/types';
 import { SEAT_ACTION_SCHEMA } from './schema';
 import { SYSTEM_PROMPT, observationToMessage } from './prompt';
 import { validateSeatAction } from './validate';
+import { ProviderError, retryAfterFrom, retryDelayMs, sleep } from './backoff';
 
 export interface CompatPrices {
   input: number; // $/MTok
@@ -160,7 +161,9 @@ export class OpenAICompatSeat implements Seat {
           return this.call(obs, adaptationsLeft - 1, feedback);
         }
       }
-      throw new Error(`HTTP ${resp.status}: ${errText}`);
+      // Carry the status and any Retry-After through to the retry policy;
+      // a bare message would leave it guessing from the text.
+      throw new ProviderError(`HTTP ${resp.status}: ${errText}`, resp.status, retryAfterFrom(resp.headers));
     }
 
     const data = (await resp.json()) as {
@@ -237,7 +240,16 @@ export class OpenAICompatSeat implements Seat {
       } catch (err) {
         this.log({ tick: obs.tick, attempt, error: String(err) });
         feedback = String(err).slice(0, 600);
-        if (attempt === 0) this.stats.retries++;
+        if (attempt === 0) {
+          this.stats.retries++;
+          // Identical policy in anthropicSeat.ts; both call the same helper so
+          // no provider gets a longer grace period than another.
+          const wait = retryDelayMs(err);
+          if (wait > 0) {
+            this.log({ tick: obs.tick, attempt, retry_delay_ms: wait });
+            await sleep(wait);
+          }
+        }
         if (attempt === 1) {
           this.stats.failures++;
           console.warn(`[${this.label}] tick ${obs.tick}: both attempts failed, passing (${String(err).slice(0, 200)})`);

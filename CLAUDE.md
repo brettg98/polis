@@ -29,6 +29,7 @@ decisions: `docs/ADR-001-goal-and-scope.md`.
 - `npm run genmap` — LLM-authored scenario/map generation
 - `npm run chronicle` — build the Chronicle viewer from run logs
 - `npm run verify:build` — build-phase acceptance cases (no keys, deterministic)
+- `npm run verify:backoff` — retry-delay acceptance cases (no keys, no network)
 - `npm run verify:scenarios` — re-certify committed scenarios against the
   ADR-003 sanity gate; run after any economy or tuning change
 - `npm run typecheck` / `npm run build`

@@ -5,6 +5,7 @@ import type { Seat, SeatAction, SeatObservation } from '../engine/types';
 import { SEAT_ACTION_SCHEMA } from './schema';
 import { SYSTEM_PROMPT, observationToMessage } from './prompt';
 import { validateSeatAction } from './validate';
+import { retryDelayMs, sleep } from './backoff';
 
 export interface UsageTotals {
   calls: number;
@@ -143,7 +144,16 @@ export class AnthropicSeat implements Seat {
       } catch (err) {
         this.log({ tick: obs.tick, attempt, ms: Date.now() - started, error: String(err) });
         feedback = String(err).slice(0, 600);
-        if (attempt === 0) this.stats.retries++;
+        if (attempt === 0) {
+          this.stats.retries++;
+          // Identical policy in openaiCompatSeat.ts; both call the same helper
+          // so no provider gets a longer grace period than another.
+          const wait = retryDelayMs(err);
+          if (wait > 0) {
+            this.log({ tick: obs.tick, attempt, retry_delay_ms: wait });
+            await sleep(wait);
+          }
+        }
         if (attempt === 1) {
           this.stats.failures++;
           console.warn(`[${this.label}] tick ${obs.tick}: both attempts failed, passing (${String(err).slice(0, 200)})`);

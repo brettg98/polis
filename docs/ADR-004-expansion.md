@@ -241,3 +241,77 @@ Tournament 2 finishes. The specific things that would move this: nobody builds
 (prices too high, or the world too tight), everybody builds identically (no
 decision), or expansion visibly changes bargaining behavior, which promotes the
 paired control run from deferred to required.
+
+## Addendum, 2026-07-31: what the calibration rotation showed
+
+A single rotation was run before the tournament proper to settle issue #10 with
+evidence rather than argument. One rotation, 100 ticks, `kilnspire-ledger-424242-v2`,
+the tournament-1 field with GLM on the direct Z.ai route. All four cities
+survived. No seat failed a call. $10.55.
+
+| model | city | final pop | ceiling | steps | materials spent | ceiling used |
+|---|---|---|---|---|---|---|
+| Sonnet | Kilnspire | 152 | 275 | 5 | 647 | 55% |
+| GLM | Greyharrow | 111 | 225 | 3 | 231 | 49% |
+| Terra | Emberfall | 48 | 200 | 2 | 125 | 24% |
+| Opus | Brinemark | 40 | 200 | 2 | 125 | 20% |
+
+Every model built. None came close to filling what it bought. The spending
+styles were sharply different — Terra put 125 into three ticks including a
+single dump of 75, GLM dribbled 231 across thirteen ticks in amounts from 1 to
+15, Sonnet spent 647 steadily. On the ADR's own success criterion (models
+diverge in how they use build) this is a pass.
+
+### The growth gate and the build currency are the same resource
+
+Not anticipated when the prices were set. Population growth is gated at
+`sim.ts:235` on all three stockpiles exceeding `stockpileCap × 0.25` = 50.
+Materials is both the currency building spends and one of the three resources
+that gate holds. Completing a step therefore pushes a city toward the condition
+that stops it growing into the ceiling it just bought.
+
+Measured over the rotation, counting ticks where a city did not grow:
+
+| city | ticks not growing | materials the only stockpile under 50 |
+|---|---|---|
+| Greyharrow (GLM) | 90 | 89 |
+| Emberfall (Terra) | 73 | 60 |
+| Kilnspire (Sonnet) | 58 | 38 |
+| Brinemark (Opus) | 98 | 23 |
+
+All twelve completed steps were followed by no growth on the next tick. The
+clearest case is Kilnspire, a materials producer with a real surplus: 87.8 → 19.5
+at t17 and 100.7 → 32.2 at t63, each time spending itself from comfortably above
+the gate to well below it.
+
+### Decision: leave the gate alone
+
+Resolves #10 with its own option 1, on evidence rather than in advance.
+
+The interaction is not a defect. It is the mechanic discriminating: Sonnet had a
+genuine materials surplus, spent the most, and finished largest with the best
+utilisation; the two cities without a surplus spent the minimum and got nothing
+for it. Build rewards a city that can afford it and punishes one that cannot,
+and three of four models could not tell which they were. That is a better
+finding than the one this ADR set out to produce.
+
+Changing the gate now would invalidate the calibration run, cost another
+rotation of money and hours, and replace a measured behaviour with a guessed
+constant — which section 4 already refused once, for the same reason.
+
+Also worth recording: the rules prompt tells every seat, every tick, that "a
+ceiling bought late is a ceiling you never fill." Four out of four bought
+anyway. Opus, having reached ceiling 200 in the hardest seat on the map and then
+sat at population 40 for sixty ticks, wrote `ceil200 -> NEVER BUILD` into its
+journal and held to it. That reversal is visible only because the journal is the
+seat's whole memory.
+
+### Limits of this evidence
+
+One rotation, no seat rotation, so Sonnet's result is confounded with Kilnspire
+being a strong seat — the trap tournament 1 documented when its hardest seat
+finished at 119, 49, 109, and 150 under four occupants. And "materials was the
+only stockpile under the gate" is not proof that building caused the shortfall:
+Brinemark produces no materials and would be short regardless. Kilnspire is the
+one city where the causation is legible in the numbers, because it spent itself
+across the threshold from a surplus it had earned.
