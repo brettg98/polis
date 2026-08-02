@@ -13,9 +13,23 @@ const OPENCODE_PRICES: Record<string, CompatPrices> = {
   'gpt-5.6-luna': { input: 1, output: 6, cachedRead: 0.1 },
 };
 
+// OpenAI list pricing, from developers.openai.com/api/docs/pricing.
+// Worth reading against OPENCODE_PRICES above: the gateway's margin is not a
+// flat markup. It resells sol at cost, terra at 1.25x, and luna at 5x. "The
+// gateway earns nothing on tokens" holds for sol and for GLM; it is false for
+// the other two, so a route change moves the cost figures as well as the
+// reported usage.
+// These are the standard rates. Requests over 272K input tokens bill at double;
+// a POLIS observation is ~4K, so that tier is unreachable here.
+const OPENAI_PRICES: Record<string, CompatPrices> = {
+  'gpt-5.6-sol': { input: 5, output: 30, cachedRead: 0.5 },
+  'gpt-5.6-terra': { input: 2, output: 12, cachedRead: 0.2 },
+  'gpt-5.6-luna': { input: 0.2, output: 1.2, cachedRead: 0.02 },
+};
+
 // Z.ai list pricing. Identical to what the gateway charges for the same model,
-// because the gateway resells at cost — which is also why it caps throughput on
-// token-hungry models and this route exists at all.
+// because the gateway resells GLM at cost — which is also why it caps
+// throughput on token-hungry models and this route exists at all.
 const ZAI_PRICES: Record<string, CompatPrices> = {
   'glm-5.2': { input: 1.4, output: 4.4, cachedRead: 0.26 },
   'glm-5.1': { input: 1.4, output: 4.4, cachedRead: 0.26 },
@@ -65,10 +79,19 @@ const EFFORT = {
   // 591 ± 87 to 863 ± 168, n=6. Lands below the Anthropic seats rather than
   // level with them; nothing on the ladder sits in between (ADR-006).
   zai: 'none',
-  // UNVERIFIED. Nothing has checked whether the Zen gateway forwards this, or
-  // what GPT 5.6 does with it. Terra played 289 ticks of tournament 2 under it.
+  // UNVERIFIABLE on this route, not merely unmeasured. The gateway returns
+  // reasoning_tokens: 0 for the GPT route while billing for them, so the
+  // quantity the bound is defined on is under-reported by construction. Any
+  // seat that has to satisfy ADR-006 belongs on a direct route; this value is
+  // whatever the gateway does with it. Terra played 289 ticks of tournament 2
+  // here.
   opencode: 'low',
-  // UNVERIFIED. No seat has run this route.
+  // Measured 567 ± 127 quiet to 899 ± 356 crisis on gpt-5.6-terra, n=5.
+  // `none` was tried and rejected: it flattens the seat to 323/353, a +9%
+  // response to a harder tick where every other seat gives +46% to +74%, and it
+  // puts the fleet 4.4x apart on the crisis observation — outside the bound.
+  // `medium` also fits; `low` is chosen because it matches Sonnet's slope
+  // exactly (+59%) and costs less.
   openai: 'low',
 } as const;
 
@@ -115,6 +138,7 @@ export function createLLMSeat(spec: string, cityId: string, opts: SeatFactoryOpt
         reasoningEffort: EFFORT.openai,
         tokenBudget: opts.tokenBudget,
         logFile,
+        prices: OPENAI_PRICES[model],
       });
     default:
       throw new Error(`unknown provider "${provider}" in seat spec "${spec}"`);

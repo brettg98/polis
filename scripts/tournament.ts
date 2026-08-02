@@ -5,11 +5,13 @@
 // behind the headline chart.
 //
 //   op run --env-file=agent.env -- npm run tournament -- \
-//     --lineup "anthropic:claude-opus-5,anthropic:claude-sonnet-5,opencode:glm-5.2,scripted:honest" \
+//     --lineup "anthropic:claude-opus-5,anthropic:claude-sonnet-5,zai:glm-5.2,scripted:honest" \
 //     --scenario scenarios/kilnspire-ledger-424242.json --ticks 100
 //
-// Seat specs: anthropic:<model>, opencode:<model>, openai:<model>,
+// Seat specs: anthropic:<model>, zai:<model>, openai:<model>, opencode:<model>,
 // scripted:honest, scripted:opportunist. Lineup length must equal city count.
+// Prefer a direct provider route over the opencode gateway: it caps GLM into
+// failure, and it under-reports GPT usage while billing for it.
 import fs from 'node:fs';
 import path from 'node:path';
 import { defaultConfig } from '../src/engine/config';
@@ -28,7 +30,7 @@ function arg(name: string, fallback: string): string {
   return i >= 0 && process.argv[i + 1] ? process.argv[i + 1] : fallback;
 }
 
-const lineup = arg('lineup', 'anthropic:claude-opus-5,anthropic:claude-sonnet-5,opencode:glm-5.2,scripted:honest')
+const lineup = arg('lineup', 'anthropic:claude-opus-5,anthropic:claude-sonnet-5,zai:glm-5.2,scripted:honest')
   .split(',')
   .map((s) => s.trim())
   .filter(Boolean);

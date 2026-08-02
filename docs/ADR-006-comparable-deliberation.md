@@ -84,8 +84,8 @@ point: it is weaker and true, where the old rule was stronger and false.
 - **The bound has to be checked, not assumed.** Before a tournament runs, and
   again from the call logs afterwards. A provider can change its mapping without
   telling us, and the failure is silent by construction.
-- `opencode` and `openai` entries remain unverified. Terra played 289 ticks of
-  tournament 2 under an unverified `low`.
+- ~~`opencode` and `openai` entries remain unverified.~~ Resolved 2026-08-02, see
+  the addendum below.
 - GLM's cost and latency drop sharply as a side effect — roughly a tenth the
   output tokens and 113s down to about 10s per call. Cost figures from
   tournaments 1 and 2 do not predict future runs.
@@ -106,6 +106,40 @@ number the run produces.
 
 **Drop GLM.** Removes the discrepancy along with the winner of both tournaments
 and the only non-Anthropic model with a completed cross-seat record.
+
+## Addendum, 2026-08-02: the fourth seat, and one route that cannot comply
+
+The decision above left `opencode` and `openai` as unmeasured entries sitting in
+a structure that presents itself as measured. Terra has since been moved to the
+direct OpenAI route (issue #18) and probed on the same two ticks, five calls per
+cell:
+
+| Terra setting | quiet | crisis | slope | fleet spread |
+|---|---|---|---|---|
+| `none` | 323 ± 35 | 353 ± 31 | +9% | 2.78x / **4.43x** |
+| `low` | 567 ± 127 | 899 ± 356 | +59% | 1.58x / 1.81x |
+| `medium` | 694 ± 110 | 1,075 ± 465 | +55% | 1.52x / 1.81x |
+
+`none` fails the bound on the crisis observation, and fails it in the
+characteristic way: it flattens the seat to a +9% response where every other
+seat gives +46% to +74%. That is the same defect that ruled out `minimal` for
+GLM — a seat that does no extra work on a harder tick is cheap for the wrong
+reason.
+
+`low` and `medium` both comply. `low` is kept: it matches Sonnet's slope exactly
+and costs less. **The entry was already `low`; what changed is that it is now
+evidence rather than a guess**, which is the whole point of the map.
+
+**`opencode` is a different case and will not be resolved by measuring.** The
+gateway reports `reasoning_tokens: 0` for the GPT route while billing for them,
+so the quantity this ADR's bound is defined on is under-reported there by
+construction. No value of the effort parameter fixes that. A seat that has to
+satisfy this rule belongs on a direct provider route, which is now the documented
+default for lineups.
+
+With that, every seat in the standard lineup is measured and the bound holds at
+1.58x on a quiet tick and 1.81x on a crisis one — comfortably inside 3x, with the
+margin absorbed by run-to-run variance rather than by the choice of settings.
 
 ## Revisit when
 

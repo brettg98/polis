@@ -285,6 +285,11 @@ const ARMS: Arm[] = [
   // so this arm sends no effort at all — anything else would measure a
   // parameter the provider has already told us it ignores here.
   { spec: 'zai:glm-5.2', effort: 'disabled', disableThinking: true },
+  // Terra direct. The gateway route reports reasoning_tokens: 0 while billing
+  // for them, so the ADR-006 bound — which is defined on output tokens — cannot
+  // be checked there at all. `medium` is the provider default, so it is what
+  // this seat ran at before any effort value was sent.
+  ...['none', 'low', 'medium'].map((effort) => ({ spec: 'openai:gpt-5.6-terra', effort })),
 ];
 
 const MAX_TOKENS = 16000; // identical to the seats
@@ -351,6 +356,16 @@ async function callCompat(
   baseUrl: string,
   keyEnv: string,
   disableThinking = false,
+  // Each provider's steady state differs, and the probe has to sit in it or it
+  // measures the adaptation rather than the effort. Z.ai accepts json_schema
+  // with a 200 and ignores it, so the seat ends up on json_object with the
+  // schema in the prompt. OpenAI keeps json_schema but rejects max_tokens for
+  // reasoning models — taken from an actual smoke run's adaptation log, not
+  // from the docs.
+  shape: { mode: 'json_schema' | 'json_object'; tokenParam: 'max_tokens' | 'max_completion_tokens' } = {
+    mode: 'json_object',
+    tokenParam: 'max_tokens',
+  },
 ): Promise<Measurement> {
   const key = process.env[keyEnv];
   if (!key) throw new Error(`${keyEnv} is not set`);
@@ -360,16 +375,19 @@ async function callCompat(
     headers: { 'content-type': 'application/json', authorization: `Bearer ${key}` },
     body: JSON.stringify({
       model,
-      max_tokens: MAX_TOKENS,
+      [shape.tokenParam]: MAX_TOKENS,
       ...(disableThinking ? { thinking: { type: 'disabled' } } : { reasoning_effort: effort }),
-      // Z.ai accepts json_schema with a 200 and then ignores it, so the seat
-      // adapts to json_object and carries the schema in the prompt. Start where
-      // the seat ends up, or the probe measures the adaptation instead of effort.
-      response_format: { type: 'json_object' },
+      response_format:
+        shape.mode === 'json_schema'
+          ? { type: 'json_schema', json_schema: { name: 'seat_action', strict: true, schema: SEAT_ACTION_SCHEMA } }
+          : { type: 'json_object' },
       messages: [
         {
           role: 'system',
-          content: `${SYSTEM_PROMPT}\n\n# Action schema (respond with JSON matching exactly this)\n${JSON.stringify(SEAT_ACTION_SCHEMA)}`,
+          content:
+            shape.mode === 'json_object'
+              ? `${SYSTEM_PROMPT}\n\n# Action schema (respond with JSON matching exactly this)\n${JSON.stringify(SEAT_ACTION_SCHEMA)}`
+              : SYSTEM_PROMPT,
         },
         { role: 'user', content: observationToMessage(obs) },
       ],
@@ -415,6 +433,11 @@ async function runArm(arm: Arm, fx: Fixture): Promise<Measurement> {
   if (provider === 'anthropic') return callAnthropic(model, arm.effort, fx.obs);
   if (provider === 'zai')
     return callCompat(model, arm.effort, fx.obs, 'https://api.z.ai/api/paas/v4', 'ZAI_API_KEY', arm.disableThinking);
+  if (provider === 'openai')
+    return callCompat(model, arm.effort, fx.obs, 'https://api.openai.com/v1', 'OPENAI_API_KEY', false, {
+      mode: 'json_schema',
+      tokenParam: 'max_completion_tokens',
+    });
   if (provider === 'opencode')
     return callCompat(model, arm.effort, fx.obs, 'https://opencode.ai/zen/v1', 'OPENCODE_API_KEY');
   throw new Error(`unknown provider "${provider}"`);

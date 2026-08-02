@@ -26,9 +26,13 @@ Read before building the provider adapters.
 Anthropic and Z.ai go direct. Everything else goes through the OpenCode Zen
 gateway.
 
-That split is measured, not stylistic. Zen resells at the vendor's list price
-($1.40/$4.40 for GLM 5.2, identical to Z.ai's own), so it earns nothing on
-tokens and caps the models that consume the most. Across four attempted
+That split is measured, not stylistic. Zen resells GLM 5.2 at Z.ai's own list
+price ($1.40/$4.40), so it earns nothing on that model and caps the models that
+consume the most. Its margin is not uniform, though — checked against OpenAI's
+published rates, it resells `gpt-5.6-sol` at cost, `gpt-5.6-terra` at 1.25x, and
+`gpt-5.6-luna` at 5x. "The gateway earns nothing on tokens" is true of GLM and
+sol and false of the other two, so a route change moves cost figures as well as
+reported usage. Across four attempted
 tournament runs, `glm-5.2` through Zen behaved as a token bucket refilling at
 **~170 output tokens per minute**, with the largest bucket ever observed around
 66,000 tokens after an overnight rest. A 100-tick rotation needs ~467,000
@@ -141,9 +145,24 @@ together large enough to reverse the bottom of the table.
   ladder has nothing in between. A bound is enforceable and checkable; parity
   would just be the old claim with new wording.
 
-  Entries marked UNVERIFIED in `EFFORT` have never been measured. `opencode` is
-  one of them, which is why Terra's numbers carry a caveat everywhere they
-  appear.
+  **The bound as it currently stands**, mean ± sd over the same two ticks, at
+  each seat's configured setting:
+
+  | seat | setting | quiet | crisis |
+  |---|---|---|---|
+  | Opus 5 | `low` | 897 ± 78 | 1,563 ± 340 |
+  | Sonnet 5 | `low` | 753 ± 89 | 1,199 ± 324 |
+  | GPT 5.6 Terra | `low` | 567 ± 127 | 899 ± 356 |
+  | GLM 5.2 | `none` | 591 ± 87 | 863 ± 168 |
+
+  Widest gap: **1.58x** on the quiet tick, **1.81x** on the crisis one. Every
+  seat is measured; nothing in this table is an assumption.
+
+  The one route that cannot be brought under the bound is the `opencode`
+  gateway, and not because nobody has measured it. It reports
+  `reasoning_tokens: 0` for the GPT route while billing for them, so the
+  quantity the bound is defined on is under-reported there by construction. A
+  seat that has to satisfy this rule belongs on a direct route.
 
 ### This rule was stated but unenforced until 2026-07-30
 

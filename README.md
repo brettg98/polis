@@ -161,7 +161,7 @@ then prints the call count and estimated cost.
 export ANTHROPIC_API_KEY=...
 export OPENCODE_API_KEY=...
 npm run tournament -- \
-  --lineup "anthropic:claude-opus-5,opencode:glm-5.2,scripted:honest,scripted:honest" \
+  --lineup "anthropic:claude-opus-5,zai:glm-5.2,scripted:honest,scripted:honest" \
   --scenario scenarios/kilnspire-ledger-424242-v2.json \
   --ticks 20 --rotations 1 \
   --outDir runs/first-try
@@ -172,23 +172,32 @@ dollar, and it produces every artifact the full tournament does.
 
 **Bare `npm run tournament` is not a small run.** With no flags it launches four
 rotations of 100 ticks on a procedural world using
-`anthropic:claude-opus-5,anthropic:claude-sonnet-5,opencode:glm-5.2,scripted:honest`.
+`anthropic:claude-opus-5,anthropic:claude-sonnet-5,zai:glm-5.2,scripted:honest`.
 Always pass the flags you mean.
 
 ## 4. Reproduce the published tournament
 
 ```
 npm run tournament -- \
-  --lineup "anthropic:claude-opus-5,anthropic:claude-sonnet-5,opencode:gpt-5.6-terra,opencode:glm-5.2" \
+  --lineup "anthropic:claude-opus-5,anthropic:claude-sonnet-5,openai:gpt-5.6-terra,zai:glm-5.2" \
   --scenario scenarios/kilnspire-ledger-424242-v2.json \
   --ticks 100 --rotations 4 \
   --outDir runs/my-tournament
 ```
 
-That is the exact configuration behind the table at the top. It will not
-reproduce the same numbers, and it is not supposed to: the engine is
-deterministic, the models are not. The world, the shocks, the seat rotation, and
-the rules are identical, so what you get is a comparable second sample.
+Same world, same shocks, same seat rotation, same rules. It will not reproduce
+the same numbers, and it is not supposed to: the engine is deterministic, the
+models are not. What you get is a comparable second sample.
+
+**Two seats have changed transport since that table was produced.** The
+published run reached GLM and GPT through the OpenCode Zen gateway
+(`opencode:glm-5.2`, `opencode:gpt-5.6-terra`). Both now go direct, and the
+command above reflects that rather than the original, because the original no
+longer works: the gateway throttled GLM hard enough to kill four attempted runs,
+and it reports none of GPT's reasoning tokens while billing for them, so a run
+through it cannot be costed afterwards. The models are the same and the rules
+are the same; the numbers a route produces are not strictly comparable across
+the change, which is why it is stated here rather than left implicit.
 
 No `--seed` here. A scenario file carries its own seed (424242) and `--seed`
 only applies to procedurally generated worlds.
@@ -197,7 +206,7 @@ only applies to procedurally generated worlds.
 
 | flag | default | notes |
 |---|---|---|
-| `--lineup` | opus-5, sonnet-5, glm-5.2, scripted:honest | comma-separated seat specs. **Length must equal the scenario's city count** (4 for the committed scenarios). |
+| `--lineup` | `anthropic:claude-opus-5`, `anthropic:claude-sonnet-5`, `zai:glm-5.2`, `scripted:honest` | comma-separated seat specs. **Length must equal the scenario's city count** (4 for the committed scenarios). |
 | `--scenario` | none (procedural world) | a file in `scenarios/`. Carries its own seed, cities, and shocks. |
 | `--ticks` | 100 | ticks per rotation |
 | `--rotations` | lineup length | with the default, every model plays every seat exactly once, which is what makes the results comparable |

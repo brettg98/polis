@@ -2,7 +2,8 @@
 // Verifies plumbing end to end: prompt, structured output, deliveries,
 // offer/accept flow, journal round-trip, usage accounting.
 //   npm run smoke -- --seat anthropic:claude-opus-5 --ticks 12 --seed 20260725
-//   npm run smoke -- --seat opencode:glm-5.2
+//   npm run smoke -- --seat zai:glm-5.2
+//   npm run smoke -- --seat openai:gpt-5.6-terra
 import fs from 'node:fs';
 import { defaultConfig } from '../src/engine/config';
 import { Simulation } from '../src/engine/sim';
