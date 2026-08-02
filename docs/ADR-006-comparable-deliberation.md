@@ -188,9 +188,15 @@ Before a run, each seat's setting is chosen against a measurement (the probe),
 and a configuration whose predicted spread exceeds 3x is not run. That is the
 enforceable half, and it is where the rule does its work.
 
-After a run, the bound is measured again from the call logs and reported. A
-completed run that breaches is **published as it came out, with the deviation
-disclosed next to the results** — not discarded, not re-run.
+After a run, the bound is measured again from the call logs and reported by
+`npm run bound -- --dir runs/<name>`. A completed run that breaches is
+**published as it came out, with the deviation disclosed next to the results** —
+not discarded, not re-run.
+
+The check refuses to certify rather than guessing, in two cases: a seat on a
+route that under-reports output tokens, and a run with too few ticks past the
+discard window. Both would otherwise produce a number that looks like a
+measurement and is not, which is the failure this whole ADR exists to prevent.
 
 This follows ADR-005's precedent rather than inventing a new one. Re-running
 non-deterministic models produces a second sample, not a correction, and a

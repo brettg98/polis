@@ -28,6 +28,9 @@ decisions: `docs/ADR-001-goal-and-scope.md`.
   (`--startRotation` resumes; a `PAUSE` file in outDir idles between ticks)
 - `npm run genmap` — LLM-authored scenario/map generation
 - `npm run chronicle` — build the Chronicle viewer from run logs
+- `npm run bound -- --dir runs/<name>` — ADR-006 bound, measured from a
+  completed run's call logs. Reports rather than gates: exit 1 means the run
+  could not be measured, not that it failed
 - `npm run verify:build` — build-phase acceptance cases (no keys, deterministic)
 - `npm run verify:backoff` — retry-delay acceptance cases (no keys, no network)
 - `npm run verify:scenarios` — re-certify committed scenarios against the

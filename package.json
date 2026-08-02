@@ -12,6 +12,7 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "headless": "tsx scripts/headless.ts",
+    "bound": "tsx scripts/bound.ts",
     "verify:backoff": "tsx scripts/verify-backoff.ts",
     "verify:build": "tsx scripts/verify-build.ts",
     "verify:scenarios": "tsx scripts/verify-scenarios.ts",
