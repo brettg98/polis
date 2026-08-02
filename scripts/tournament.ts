@@ -146,15 +146,32 @@ async function runOne(rotation: number, scenario: Scenario | undefined, outDir: 
         lastJournal[c.id] = j;
       }
     }
+    // What reaches stdout while a run is in flight. Everything is in the
+    // chronicle regardless, but that is only written when the rotation ends —
+    // hours, for 100 ticks — so this stream is the only live view and an
+    // omission from it reads as an absence in the world. `build` was missing
+    // and cost a live misread of tournament 2. `pact` stays out: agreements
+    // form several per tick, which is what the chronicle is for.
     for (const e of sim.events.slice(seenEvents)) {
-      if (e.kind === 'defection' || e.kind === 'collapse' || e.kind === 'embargo') {
+      if (e.kind === 'defection' || e.kind === 'collapse' || e.kind === 'embargo' || e.kind === 'build' || e.kind === 'shock') {
         console.log(`   t${t} [${e.kind}] ${e.text}`);
       }
     }
     seenEvents = sim.events.length;
     if (t % 10 === 0) {
+      // pop/ceiling+banked. A `build` event only fires when a step completes,
+      // and in rotation 0 of tournament 2 the seats spent materials on 28 to 45
+      // ticks each while producing 2 to 4 events — Greyharrow spent from t3 and
+      // did not complete a step until t12. Printing completions alone would
+      // still have answered "is anyone building?" with nine ticks of silence,
+      // so the banked figure carries what the event stream structurally cannot.
       const pops = sim.cities
-        .map((c) => `${c.name.slice(0, 5)}:${c.status === 'ruins' ? 'DEAD' : Math.round(c.population)}`)
+        .map((c) => {
+          const short = c.name.slice(0, 5);
+          if (c.status === 'ruins') return `${short}:DEAD`;
+          const banked = Math.round(c.buildProgress);
+          return `${short}:${Math.round(c.population)}/${Math.round(sim.ceilingOf(c))}${banked > 0 ? `+${banked}` : ''}`;
+        })
         .join('  ');
       console.log(`   t${String(t).padStart(3)}  ${pops}`);
     }
