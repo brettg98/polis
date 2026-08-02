@@ -13,6 +13,31 @@
 # is the answer to "did you cherry-pick?" — yes, and here is the exact pick list.
 
 tournament: Tournament 1
+
+# What this run does not support. Required — the build refuses without it.
+# Rendered as paragraphs under "What this measures, and what it does not", next
+# to the standings rather than in a footnote, because the failure mode is a
+# number travelling without its caveat. `backticks` become inline code; no other
+# markup survives escaping.
+caveats:
+  - >-
+    One flaw in this run is worth stating plainly, because it favoured the
+    winner. The seats were meant to be held at the same reasoning effort and
+    were not. The cap was only ever sent to the two Anthropic seats, which
+    played at `low`; the other two ran at whatever their provider does by
+    default, and GLM's default is its maximum. Measured afterwards on ticks from
+    these runs, that is roughly ten times the output tokens per call, almost all
+    of it reasoning. The model that finished first was thinking far longer per
+    turn than two of its opponents were permitted to.
+  - >-
+    A fix was applied after this tournament, and it did not hold. Sending every
+    seat the same value turned out not to produce the same deliberation: one
+    provider honours the setting and another accepts it and quietly substitutes
+    its own. That was not discovered until later, and it means the run after
+    this one carried a version of the same flaw. The results here are published
+    as they came out rather than quietly re-run, but the standings should be
+    read as a result under stated conditions, not as a clean
+    model-versus-model comparison.
 runDir: runs/tournament-main
 stories:
   - id: cursed-chair

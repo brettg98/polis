@@ -37,6 +37,14 @@ interface CurationStory {
 
 interface Curation {
   tournament: string;
+  // Per-tournament, and required. ADR-005 asks that a run's flaws appear where
+  // its results appear rather than somewhere in the repo, and this used to be
+  // one hard-coded paragraph describing tournament 1. Tournament 2 failed
+  // differently — every seat was sent the same effort value and one provider
+  // ignored it — so the shared paragraph was not merely incomplete for it, it
+  // was wrong. Each run states its own, and a run with nothing to say has to say
+  // so out loud rather than by omission.
+  caveats: string[];
   stories: CurationStory[];
 }
 
@@ -82,6 +90,16 @@ const summary = JSON.parse(fs.readFileSync(summaryPath, 'utf8')) as SummaryFile;
 // fields are editorial, and a one-word change produces a one-line diff. JSON is
 // still accepted, since YAML is a superset of it.
 const curation = YAML.parse(fs.readFileSync(contentPath, 'utf8')) as Curation;
+
+// Refuse to build a results page with no caveats. Forgetting the disclosure is
+// silent by nature — the page looks finished — so the failure has to be loud.
+if (!Array.isArray(curation.caveats) || curation.caveats.length === 0) {
+  console.error(
+    `${contentPath} has no "caveats". Every tournament states what its results do not support; ` +
+      `see docs/ADR-005-reasoning-effort-and-tournament-1.md. Use a single entry saying so if a run genuinely has none.`,
+  );
+  process.exit(1);
+}
 
 function byRotation(rotation: number): Chronicle {
   const ch = chronicles.find((c) => c.rotation === rotation);
@@ -221,7 +239,7 @@ ${shockRows}
 </table>
 <h3>What this measures, and what it does not</h3>
 <p>These are results from one game with one set of incentives, and the headlines below describe how a model played it. A model that defected often was solving the problem this world posed, which rewards a city for taking what it needs when a neighbour is weak. That is not a finding about whether the model is trustworthy in your application, safe to deploy, or good at anything other than this. Nothing here was measured under conditions any vendor designed for, and none of it should be read as a ranking of model quality.</p>
-<p>One flaw in the run is worth stating plainly, because it favoured the winner. The seats were meant to be held at the same reasoning effort and were not: the two Anthropic seats were capped at <span class="tok">low</span> while the other two ran at their provider defaults, GLM's being near-maximum. On identical prompts that is roughly six times the output tokens, most of it reasoning. The model that finished first was thinking considerably longer per turn than two of its opponents were allowed to. This was found and fixed after the tournament, and the results are published as they came out rather than quietly re-run — but the standings should be read as a result under stated conditions, not as a clean model-versus-model comparison.</p>
+${curation.caveats.map((c) => `<p>${inlineTok(c)}</p>`).join('\n')}
 <p>What it does show is that these systems negotiate, keep books, hold grudges, and break deals in ways that are legible when you read what they wrote at the time. That is the reason for publishing the journals rather than the scores.</p>
 <h3>Reading the quotes</h3>
 <p>Everything quoted below is verbatim model output, unedited. Two channels: a <strong>journal</strong> is private, a capped notebook each model writes to itself and receives back on the next tick, which is the closest thing here to a model's inner voice; a <strong>cable</strong> is a message sent to another city, which that city reads. Models refer to each other by the short ids above, to standing deals as <span class="tok">a###</span> (agreements), and to proposals as <span class="tok">o###</span> (offers). The compressed telegraphic style is theirs: the journal has a token budget, and they spend it on arithmetic rather than prose.</p>
@@ -302,6 +320,16 @@ if (problems) {
 // Quotes are escaped too, so this is safe in attribute contexts as well as
 // text. Without them a value breaks out of id="..." even though it looks
 // escaped. Harmless in text: &quot; renders as ".
+// Caveat prose comes from the curation file, so it is data and gets escaped like
+// every other authored string here. The paragraph this replaced was a template
+// literal and could carry markup directly; that is no longer true, so the one
+// piece of formatting it needs is reintroduced afterwards from a backtick
+// convention. Escaping first means nothing in the file can produce markup — only
+// this transform can, and it emits one fixed tag.
+function inlineTok(s: string): string {
+  return escapeHtml(s).replace(/`([^`]+)`/g, '<span class="tok">$1</span>');
+}
+
 function escapeHtml(s: string): string {
   return s
     .replace(/&/g, '&amp;')

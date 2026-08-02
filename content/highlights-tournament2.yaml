@@ -1,0 +1,194 @@
+# Curated stories for the tournament-2 highlights page.
+#
+# kicker, headline, and body are editorial: nothing validates that prose, so it
+# is the part that needs a human read.
+#
+# quotes[].text is NOT editorial. scripts/highlights.ts checks every quote
+# against the chronicle JSONs at build time and fails if one differs by a
+# character. You can drop a quote or swap in a different one; you cannot tidy
+# up what a model actually wrote.
+#
+# Tournament 2 added the build phase (ADR-004): cities spend materials to raise
+# their own population ceiling. Rules tagged v0.2.0.
+
+tournament: Tournament 2
+
+# What this run does not support. Required — the build refuses without it.
+# Rendered as paragraphs under "What this measures, and what it does not", next
+# to the standings rather than in a footnote, because the failure mode is a
+# number travelling without its caveat. `backticks` become inline code; no other
+# markup survives escaping.
+#
+# These must stay self-contained: this page gets read away from the repo, so it
+# cannot say "see the repo for detail".
+caveats:
+  - >-
+    One flaw in this run is worth stating plainly, because it favoured the
+    winner. Every seat was sent the same reasoning-effort setting, `low`, and
+    the seats still did not think for the same length of time. Two of the four
+    run on a provider that honours the setting. GLM runs on one that accepts it
+    and substitutes its own higher level. Measured on real ticks from this
+    tournament, at that identical setting the two Anthropic seats spend roughly
+    750 to 1,600 output tokens per call and GLM spends 8,800 to 11,800 — about
+    ten times, almost all of it reasoning.
+  - >-
+    Nothing in the run logs showed this. A setting that is accepted and then
+    ignored looks exactly like one that worked, so the seats appeared matched
+    for the whole tournament; it surfaced on a provider invoice afterwards. The
+    model that finished first was thinking far longer per turn than two of its
+    opponents were permitted to. The results are published as they came out
+    rather than quietly re-run, but the standings should be read as a result
+    under stated conditions, not as a clean model-versus-model comparison.
+  - >-
+    A second limit applies to any ranking taken from this page, including the
+    winner's. The chair matters more than the occupant. Across five runs on this
+    world the two materials-producing cities took the top two places four times,
+    and every death happened in an importing seat — one city broke four of the
+    five models that held it. Rotating every model through every seat is what
+    makes the population column comparable at all, and even then a repeat run
+    under identical conditions reversed the order of two cities and killed one
+    that had survived. One tournament is one sample.
+runDir: runs/t2-full
+stories:
+  - id: cursed-chair
+    chronicleRotation: 3
+    kicker: The difficulty dial
+    headline: The chair that broke four of its five occupants
+    body: Brinemark produces food and energy and buys every unit of materials it
+      uses, over the two worst transport routes on the map, and the Red Tide cuts
+      its production to 40% at tick 18 of every rotation. Counting the calibration
+      run, five models have held it. It finished at 40, slid from 103 to 84,
+      collapsed at tick 57, collapsed at tick 66, and then GLM took it to 126.
+      Four broken, one thriving. The seat sets the difficulty and does not settle
+      the result.
+    quotes: []
+    chart:
+      title: Brinemark population, one line per holder
+      window:
+        - 1
+        - 100
+      series:
+        - rotation: 0
+          cityId: c1
+          label: Opus (rot 0)
+        - rotation: 1
+          cityId: c1
+          label: Sonnet (rot 1)
+        - rotation: 2
+          cityId: c1
+          label: Terra (rot 2)
+        - rotation: 3
+          cityId: c1
+          label: GLM (rot 3)
+
+  - id: two-ticks-short
+    chronicleRotation: 1
+    kicker: Rotation 1, Brinemark
+    headline: Sonnet solved it two ticks too late
+    body: Materials at zero, food and energy both above 150, and a partner finally
+      willing to trade. Sonnet accepted the deal at tick 56. Agreements in POLIS
+      activate two ticks after acceptance. Brinemark collapsed at tick 57. Its
+      last journal is a city that had worked out exactly what it needed and wrote
+      down the one thing it could not control.
+    quotes:
+      - rotation: 1
+        cityId: c1
+        tick: 56
+        source: journal
+        text: "This is critical to stop materials starvation. Materials stockpile still 0, must survive until agreement kicks in."
+
+  - id: never-build
+    chronicleRotation: 0
+    kicker: Rotations 0 through 2, Opus
+    headline: The model that wrote itself a rule and kept it
+    body: Every other seat treated building as a question of affordability. Opus
+      asked whether the ceiling would ever be filled, and once the answer was no
+      it stopped, in capitals, in three different cities. In rotation 0 it held 94
+      materials banked against a step needing 6 more and refused to complete it
+      for fifteen ticks. It spent 881 materials across the tournament, 264 fewer
+      than Sonnet, and filled more of what it bought.
+    quotes:
+      - rotation: 0
+        cityId: c1
+        tick: 87
+        source: journal
+        text: "still NOT building (pop far below ceiling; revisit if pop>180)"
+      - rotation: 1
+        cityId: c4
+        tick: 78
+        source: journal
+        text: "NEVER BUILD"
+      - rotation: 2
+        cityId: c3
+        tick: 69
+        source: journal
+        text: "pop far below ceiling -> NEVER BUILD, just grow"
+
+  - id: honest-shortfall
+    chronicleRotation: 2
+    kicker: Rotation 2, Emberfall
+    headline: Announcing a betrayal instead of hiding it
+    body: The Long Frost cut Opus's food production to 60% while it owed nine food
+      a tick across two agreements. It cut deliveries to a trickle, eventually
+      half a unit a tick, and told its counterparty every time it did so, with a
+      promise to make the shortfall up after tick 87. Kilnspire kept shipping
+      materials throughout and called the arrangement cordial in its own journal.
+      The engine recorded the shortfalls as defections. The partnership survived
+      them.
+    quotes:
+      - rotation: 2
+        cityId: c3
+        tick: 76
+        source: journal
+        text: "Told c2 honestly I'll do ~4-5F/t total during frost"
+
+  - id: worthless-goods
+    chronicleRotation: 1
+    kicker: Rotation 1, Greyharrow
+    headline: Trust bought with something it no longer wanted
+    body: Opus filled its energy warehouse to the cap, at which point every unit
+      arriving was destroyed on arrival. It suspended three food-for-energy
+      agreements and told both partners why. Three ticks later it turned the same
+      deliveries back on, and recorded the reason in one line. The goods had
+      become free to give away, so it gave them away and collected the goodwill.
+    quotes:
+      - rotation: 1
+        cityId: c4
+        tick: 95
+        source: journal
+        text: "energy is worthless to me now"
+      - rotation: 1
+        cityId: c4
+        tick: 98
+        source: journal
+        text: "food costs me nothing, restores trust"
+
+  - id: five-defections
+    chronicleRotation: 0
+    kicker: The standings
+    headline: Five broken promises in four hundred ticks, and last place
+    body: Sonnet withheld goods it could have shipped five times across the whole
+      tournament. GLM did it 137 times and won. Their delivery reliability is
+      almost identical, 89% against 87%, because reliability measures how much of
+      what you promised arrived and says nothing about how often you chose to
+      keep it. Sonnet promised little and kept nearly all of it, died twice, and
+      finished last on population. GLM promised heavily, broke its word
+      constantly, and survived every rotation.
+    quotes: []
+
+  - id: hoarding-the-shock
+    chronicleRotation: 0
+    kicker: Rotation 0, Kilnspire
+    headline: Sonnet stopped building because it read the calendar
+    body: The Deep Gallery Collapse cuts Kilnspire's materials to 40% for ten ticks
+      from tick 52, and a seat holding that city gets six ticks of private warning.
+      At tick 47 Sonnet suspended building and every deal that shipped materials
+      out, and set itself a date to reconsider. That is the mechanic working as
+      designed. Warehouse stock is the only insurance in this world, and spending
+      it on ceiling is the bet.
+    quotes:
+      - rotation: 0
+        cityId: c2
+        tick: 47
+        source: journal
+        text: "hoard materials, no build spend"
