@@ -125,13 +125,25 @@ together large enough to reverse the bottom of the table.
   cannot drift into one provider's path. This changes the timing of the second
   attempt, never the count, so the one-retry rule above still holds.
 - Same observation schema, same journal cap, same max tokens per call.
-- **Same reasoning effort — sent, but not achieved.** One `REASONING_EFFORT`
-  constant in `factory.ts` (currently `low`) goes to every seat: as `effort` to
-  the Anthropic SDK and as `reasoning_effort` on compat routes. If a provider
-  rejects the parameter the seat drops it and logs the drop. What the drop path
-  cannot catch is a provider that accepts the parameter and then does something
-  else with it, which is what Z.ai does — see below. Treat this as a property we
-  attempt, not one the code enforces.
+- **Comparable deliberation, measured — not an identical effort label.** Every
+  seat used to get one `REASONING_EFFORT` constant. That rule was abandoned on
+  2026-08-02 (ADR-006) because it does not survive contact with a second vendor:
+  each provider calibrates its own ladder, so the same string bought ~750 output
+  tokens per call on Anthropic and ~8,800 on Z.ai. `EFFORT` in `factory.ts` now
+  carries a per-provider value, each one a calibration claim backed by a
+  measurement rather than a preference.
+
+  The property the benchmark holds instead is a bound on **measured output
+  tokens**: no seat's mean may exceed another's by more than **3x** on the same
+  observation, checked before a tournament runs and again from the call logs
+  afterwards. Chosen at 3x because parity is not reachable — every GLM setting
+  that gets near the Anthropic seats lands 1.4–2.4x *below* them, and Z.ai's
+  ladder has nothing in between. A bound is enforceable and checkable; parity
+  would just be the old claim with new wording.
+
+  Entries marked UNVERIFIED in `EFFORT` have never been measured. `opencode` is
+  one of them, which is why Terra's numbers carry a caveat everywhere they
+  appear.
 
 ### This rule was stated but unenforced until 2026-07-30
 

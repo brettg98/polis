@@ -1,0 +1,115 @@
+# ADR-006: What "same reasoning effort" is replaced by
+
+Date: 2026-08-02
+Status: accepted
+Supersedes the open question left in ADR-005's 2026-08-02 addendum.
+
+## Context
+
+`docs/llm-seats.md` required identical reasoning effort across seats from the
+day the seat layer existed. ADR-005 recorded that the rule was documented but
+unenforced during tournament 1, and that the constant was equalised afterwards.
+That equalisation was assumed to fix it.
+
+Issue #21 measured whether it had. It had not, on half the lineup. Replaying two
+real tournament ticks at five calls per cell, at an identical `low`:
+
+| seat | quiet tick | crisis tick |
+|---|---|---|
+| Opus 5 | 897 ± 78 | 1,563 ± 340 |
+| Sonnet 5 | 753 ± 89 | 1,199 ± 324 |
+| GLM 5.2 | 8,771 | 11,814 |
+
+Anthropic honours the parameter — `low`, `high` and `max` are monotonic and
+steep. Z.ai accepts it and does not deliver a low setting; its reference states
+that `low` and `medium` are mapped onto `high` for glm-5.2. Because the value is
+accepted rather than rejected, the compat adapter's drop path never fires and no
+log line records a problem. It was caught on an invoice.
+
+**Tournaments 1 and 2 both ran under this, in the same direction, and GLM won
+both.**
+
+The rule cannot be repaired by sending a different string. Each vendor defines
+and calibrates its own ladder, and the ladders do not have comparable rungs. On
+GLM the reachable states are effectively "thinking off" (591–863 output tokens),
+`high` (5,733–10,627) and `max` (9,606–14,330). There is nothing between the
+first and the second, and the Anthropic seats at `low` sit in that gap.
+
+## Decision
+
+**The rule "identical reasoning effort across seats" is withdrawn. It is replaced
+by a bound on measured output tokens: no seat's mean may exceed another's by more
+than 3x on the same observation.**
+
+`REASONING_EFFORT`, one constant for every seat, becomes `EFFORT`, a per-provider
+map in `src/llm/factory.ts`. Each entry is a calibration claim about that
+provider, backed by a measurement, and entries that have never been measured say
+so in the code.
+
+**The GLM route sends `none`.** Of the three settings Z.ai documents as skipping
+thinking, the three are indistinguishable by token count (every pairwise Welch
+comparison fails significance at n=5), but they differ in how they respond to a
+harder tick: `none` does more work on the crisis observation (+46%, t=2.75),
+`minimal` is flat (+4%, t=0.39) across two independent passes, and
+`thinking: {"type": "disabled"}` is ambiguous (+22%, t=1.83). The Anthropic seats
+respond at +74% and +59%. A seat pinned flat is not playing the same game at any
+token count, and the crisis ticks are where the measured behaviour lives, so the
+choice was made on that axis rather than on volume.
+
+## Why a bound, and why 3x
+
+A bound is enforceable from our side; parity is not. Setting the target at
+parity would restate the old claim in new words and be false in the same way.
+
+3x is chosen against what is reachable rather than what is tidy. With GLM on
+`none` the widest cross-seat gap is 1.45x on a quiet tick and 1.82x on a crisis
+one, so 3x holds with room for the run-to-run variance actually observed —
+Anthropic's own crisis-tick spread is 22–27% of its mean. A tighter bound would
+fail on noise; a looser one would have admitted the 7.5–10x that produced this
+ADR.
+
+This is deliberately a weaker property than the one it replaces. That is the
+point: it is weaker and true, where the old rule was stronger and false.
+
+## Consequences
+
+- **Tournament 3 is not comparable to 1 or 2 on the effort axis.** Both earlier
+  runs had GLM deliberating roughly ten times the Anthropic seats; this changes
+  it. That is a third reason those runs do not line up, alongside the build
+  mechanic and the tournament-1 disclosure already in ADR-005.
+- **GLM is not level with the Anthropic seats, it is under them** — 591–863
+  output tokens against 753–1,563. The asymmetry is smaller and points the other
+  way. Any writeup comparing GLM to the Anthropic models has to say so, and the
+  same disclosure discipline ADR-005 established applies.
+- **The bound has to be checked, not assumed.** Before a tournament runs, and
+  again from the call logs afterwards. A provider can change its mapping without
+  telling us, and the failure is silent by construction.
+- `opencode` and `openai` entries remain unverified. Terra played 289 ticks of
+  tournament 2 under an unverified `low`.
+- GLM's cost and latency drop sharply as a side effect — roughly a tenth the
+  output tokens and 113s down to about 10s per call. Cost figures from
+  tournaments 1 and 2 do not predict future runs.
+
+## Rejected
+
+**Raise every seat to `high` instead.** Would put Opus at 3,186, Sonnet at 1,986
+and GLM at 5,733 on a quiet tick — a 2.9x spread, inside the bound, with nobody's
+reasoning switched off and every seat still adapting to tick difficulty. Rejected
+on cost and headroom: Anthropic output rises 2–4x, and GLM's 10,627 on a crisis
+tick sits close enough to the 16,000 ceiling to risk the exhaustion failure that
+cost a tick in rotation 1. Worth revisiting if the ceiling moves.
+
+**Keep the identical-label rule and disclose the gap.** This is what tournament 2
+did, unintentionally. The gap is an order of magnitude; disclosing it does not
+make the comparison usable, and the disclosure would have to be repeated on every
+number the run produces.
+
+**Drop GLM.** Removes the discrepancy along with the winner of both tournaments
+and the only non-Anthropic model with a completed cross-seat record.
+
+## Revisit when
+
+The output ceiling changes, a provider's documented mapping changes, or a seat's
+measured band moves — any of which can break the bound silently. Also if the
+`opencode` route is ever measured, since that entry is currently an assumption
+sitting in a structure that presents itself as measured.

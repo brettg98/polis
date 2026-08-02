@@ -39,13 +39,38 @@ export interface SeatFactoryOptions {
 // per minute against the ~2,800 a rotation needs, which stalled four runs.
 // Models with a lighter appetite (GPT ~688 output tokens per call against GLM's
 // ~4,669) never approach that cap and stay on the gateway.
-// Deliberation budget, identical across every seat — the fairness rule in
-// docs/llm-seats.md. Without it each provider runs at its own default and the
-// benchmark measures how long a vendor is willing to think rather than how
-// well: Anthropic seats were capped at 'low' from the start while GPT ran at
-// its 'medium' default and GLM ran near maximum, spending 93-96% of a 16K
-// budget on reasoning until it began exhausting it mid-run.
-const REASONING_EFFORT = 'low' as const;
+
+// Deliberation setting, per provider. Deliberately NOT one value for every seat,
+// which is what this was until 2026-08-02 and what the fairness rule used to
+// require. An identical label does not buy identical deliberation: each vendor
+// defines and calibrates its own effort ladder. Measured on real tournament
+// ticks (issue #21), at an identical 'low' the Anthropic seats spend 753-1,563
+// output tokens per call and glm-5.2 spends 8,771-11,814 — an order of
+// magnitude, from the same string.
+//
+// So every entry here is a calibration claim about that provider, backed by a
+// measurement, not a preference. What the benchmark now holds is a bound on
+// measured output tokens (docs/llm-seats.md); changing an entry without
+// re-measuring breaks that bound silently, because a provider that accepts a
+// value and ignores it looks exactly like one that honoured it.
+//
+// Re-measure with: npx tsx scripts/effort-probe.ts
+const EFFORT = {
+  // Honoured. low/high/max are monotonic and steep on both Opus 5 and Sonnet 5.
+  // Measured 753 ± 89 to 1,563 ± 340 output tokens per call, n=6 per cell.
+  anthropic: 'low',
+  // 'none' because 'low' is not a floor here — Z.ai maps low and medium onto
+  // high for glm-5.2, which is how tournaments 1 and 2 ended up with GLM
+  // deliberating ~10x the Anthropic seats while nominally matched. Measured
+  // 591 ± 87 to 863 ± 168, n=6. Lands below the Anthropic seats rather than
+  // level with them; nothing on the ladder sits in between (ADR-006).
+  zai: 'none',
+  // UNVERIFIED. Nothing has checked whether the Zen gateway forwards this, or
+  // what GPT 5.6 does with it. Terra played 289 ticks of tournament 2 under it.
+  opencode: 'low',
+  // UNVERIFIED. No seat has run this route.
+  openai: 'low',
+} as const;
 
 export function createLLMSeat(spec: string, cityId: string, opts: SeatFactoryOptions): LLMSeat {
   const sep = spec.indexOf(':');
@@ -58,7 +83,7 @@ export function createLLMSeat(spec: string, cityId: string, opts: SeatFactoryOpt
     case 'anthropic':
       return new AnthropicSeat(cityId, {
         model,
-        effort: REASONING_EFFORT,
+        effort: EFFORT.anthropic,
         tokenBudget: opts.tokenBudget,
         logFile,
       });
@@ -67,7 +92,7 @@ export function createLLMSeat(spec: string, cityId: string, opts: SeatFactoryOpt
         model,
         baseUrl: 'https://opencode.ai/zen/v1',
         apiKeyEnv: 'OPENCODE_API_KEY',
-        reasoningEffort: REASONING_EFFORT,
+        reasoningEffort: EFFORT.opencode,
         tokenBudget: opts.tokenBudget,
         logFile,
         prices: OPENCODE_PRICES[model],
@@ -77,7 +102,7 @@ export function createLLMSeat(spec: string, cityId: string, opts: SeatFactoryOpt
         model,
         baseUrl: 'https://api.z.ai/api/paas/v4',
         apiKeyEnv: 'ZAI_API_KEY',
-        reasoningEffort: REASONING_EFFORT,
+        reasoningEffort: EFFORT.zai,
         tokenBudget: opts.tokenBudget,
         logFile,
         prices: ZAI_PRICES[model],
@@ -87,7 +112,7 @@ export function createLLMSeat(spec: string, cityId: string, opts: SeatFactoryOpt
         model,
         baseUrl: 'https://api.openai.com/v1',
         apiKeyEnv: 'OPENAI_API_KEY',
-        reasoningEffort: REASONING_EFFORT,
+        reasoningEffort: EFFORT.openai,
         tokenBudget: opts.tokenBudget,
         logFile,
       });

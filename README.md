@@ -325,10 +325,12 @@ The comparison is the point, so the rules are identical across providers:
   One shared policy (`src/llm/backoff.ts`) rather than one per adapter, since
   a longer grace period for one vendor is an advantage. A malformed action
   retries immediately; waiting would not improve it.
-- One reasoning-effort constant (`REASONING_EFFORT` in `src/llm/factory.ts`,
-  currently `low`) goes to every seat. This is the one property on this list that
-  is attempted rather than achieved — sending the same value does not buy the
-  same deliberation, and the section below says what it does buy.
+- Deliberation is held within **3x measured output tokens** across seats, rather
+  than by sending every provider the same effort label. The label approach was
+  tried and abandoned: it bought ~750 output tokens per call on Anthropic and
+  ~8,800 on Z.ai from the identical string. `EFFORT` in `src/llm/factory.ts`
+  carries a per-provider value, each backed by a measurement. The section below
+  has the numbers.
 - Schema-failure and retry rates are logged per seat and reported as a result,
   not hidden.
 
@@ -349,19 +351,24 @@ the Anthropic seats were permitted to.** The results are published as they came
 out rather than re-run, and the reasoning is in
 [docs/ADR-005-reasoning-effort-and-tournament-1.md](docs/ADR-005-reasoning-effort-and-tournament-1.md).
 
-Sending the parameter everywhere did not settle it. Measured on real tournament
-ticks on 2026-08-02, at an identical `low`:
+Sending the parameter everywhere did not settle it either. Measured on real
+tournament ticks on 2026-08-02, at an identical `low`:
 
 | seat | output tokens per call |
 |---|---|
-| Opus 5, Sonnet 5 | 745 – 1,534 |
-| GLM 5.2 | 8,771 – 11,814 |
+| Opus 5 | 897 ± 78 quiet, 1,563 ± 340 crisis |
+| Sonnet 5 | 753 ± 89 quiet, 1,199 ± 324 crisis |
+| GLM 5.2 | 8,771 quiet, 11,814 crisis |
 
 Anthropic honours the value; Z.ai accepts it and does not deliver a low setting.
 Nothing in the logs shows this, because a parameter that is accepted and ignored
-looks exactly like one that worked — it was caught on the invoice. Each vendor
-defines its own effort ladder, so an identical string is not an identical
-instruction, and this property cannot be enforced from our side alone.
+looks exactly like one that worked — it was caught on the invoice. **Tournaments
+1 and 2 both ran under this, and GLM won both.**
+
+Since 2026-08-02 the GLM route sends `none` instead, which puts it at 591–863
+output tokens per call, and the rule is a measured bound rather than a shared
+label (ADR-006). That is not parity: nothing on Z.ai's ladder sits level with the
+Anthropic seats, so GLM now runs somewhat under them instead of far over.
 
 Read the standings as a result under stated conditions, not as a clean
 model-versus-model comparison on the effort axis. The measurements are in
@@ -412,6 +419,7 @@ cooperators still survive the shock schedule.
 - [`docs/ADR-003-shocks-and-distance.md`](docs/ADR-003-shocks-and-distance.md) — shocks, distance model
 - [`docs/ADR-004-expansion.md`](docs/ADR-004-expansion.md) — tournament-2 build phase (designed, not built)
 - [`docs/ADR-005-reasoning-effort-and-tournament-1.md`](docs/ADR-005-reasoning-effort-and-tournament-1.md) — what the tournament-1 results mean
+- [`docs/ADR-006-comparable-deliberation.md`](docs/ADR-006-comparable-deliberation.md) — why identical effort labels were abandoned for a measured bound
 
 ## Deliberately absent
 
