@@ -31,9 +31,10 @@ GLM first on average final population (150, against Opus 137, Terra 130, Sonnet
 99) while it was deliberating several times longer per call than the Anthropic
 seats were permitted to.
 
-The constant was equalised on 2026-07-30 (`a4bfd5c`). That fixes every run from
-here. It does not settle what the already-published result means, which is what
-this ADR decides.
+The constant was equalised on 2026-07-30 (`a4bfd5c`). That was believed at the
+time to fix every run from here; it did not, and the addendum below records what
+it actually did. It does not settle what the already-published result means,
+which is what this ADR decides.
 
 ## Decision
 
@@ -93,3 +94,63 @@ until tournament 2 finishes.
 Reasoning effort is deliberately swept as a variable across all seats, which
 would produce the clean comparison this run cannot support, and would supersede
 the disclosure rather than repeat it.
+
+## Addendum, 2026-08-02: the equalisation only half worked
+
+The context above assumed `a4bfd5c` fixed the asymmetry going forward. It fixed
+the half of it that was a missing parameter. It could not fix the half that is a
+provider disagreeing about what the parameter means, and nothing had checked
+which half was which. Issue #21 checked.
+
+`scripts/effort-probe.ts` replays two real tournament ticks at several effort
+levels; the full table is in `llm-seats.md`. The two numbers that matter:
+
+| seat | sent | output tokens per call |
+|---|---|---|
+| Opus 5, Sonnet 5 | `effort: 'low'` | 745 – 1,534 |
+| GLM 5.2 | `reasoning_effort: 'low'` | 8,771 – 11,814 |
+
+Anthropic honours the value — its ladder is monotonic and steep across `low`,
+`high` and `max`. Z.ai accepts it and does not deliver a low setting. Because the
+parameter is accepted rather than rejected, the adapter's drop path never fires
+and no log line records a problem; the discrepancy is visible only on the
+invoice, which is where it was caught.
+
+**So tournament 2 ran under an asymmetry of the same kind as tournament 1, in the
+same direction, and GLM won it again** (average population 124 against Opus 97).
+The disclosure this ADR requires for tournament 1 is therefore owed by tournament
+2 as well, wherever those results appear. That is a direct application of the
+decision above, not a new one — but it has to happen before the tournament-2
+chronicle and highlights are published, not after.
+
+The rest of the decision is unaffected. Tournament 1 still stands as published;
+if anything the case is stronger, because the flaw is now a measured property of
+a provider rather than a one-off configuration slip.
+
+### Still open
+
+The rule "identical reasoning effort across seats" is not enforceable as written,
+because each vendor defines and calibrates its own ladder — `low` buys about
+1,000 output tokens on Anthropic and about 10,000 on Z.ai. What should replace it
+is a decision for a future ADR, not something this addendum settles. The options
+on the table, with their costs, are in issue #21.
+
+Two constraints any replacement inherits. `max` is unreachable at the present
+16,000-token output ceiling: three of four Anthropic `max` calls exhausted it and
+returned no parseable action, so sweeping effort upward means moving the ceiling,
+and the ceiling is itself one of the equalised properties. And GLM cannot be made
+to match the Anthropic seats — only to miss by less. At five calls per cell, the
+three settings Z.ai documents as skipping thinking (`none`, `minimal`, and the
+separate `thinking: {"type": "disabled"}` field) all land below both Anthropic
+seats at `low`. The best of them, `none`, runs 1.45x under the widest seat on a
+quiet tick and 1.82x under on a crisis one, against 10.0x and 7.5x *over* at the
+`low` the tournaments actually used. There is nothing on GLM's ladder between
+those two regimes.
+
+On volume the three off-switches are interchangeable; repeats could not separate
+them. They separate on the response to a harder tick, where `none` behaves like
+the Anthropic seats and `minimal` is flat — which matters because the crisis
+ticks are where the measured behaviour lives. Numbers and their limits are in
+`llm-seats.md`. Any replacement rule should be set against measured output rather
+than the documented labels, which have diverged from the vendor reference more
+than once.

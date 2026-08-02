@@ -32,7 +32,8 @@ Seed 424242, four rotations of 100 ticks, every model taking every seat.
 **One caveat travels with this table.** The seats were not on equal reasoning
 effort when it was produced: the two Anthropic seats were capped at `low` and
 the other two ran at their provider defaults, GLM's being near-maximum. It was
-found and fixed after the run. The results are published as they came out, and
+found after the run, and the fix attempted afterwards turned out to work on one
+provider and not the other. The results are published as they came out, and
 [Fairness](#fairness) below has the detail.
 
 Delivery reliability is units shipped over units promised across all four
@@ -325,8 +326,9 @@ The comparison is the point, so the rules are identical across providers:
   a longer grace period for one vendor is an advantage. A malformed action
   retries immediately; waiting would not improve it.
 - One reasoning-effort constant (`REASONING_EFFORT` in `src/llm/factory.ts`,
-  currently `low`) goes to every seat. A seat thinking without a cap is not
-  playing under the same rules as the others.
+  currently `low`) goes to every seat. This is the one property on this list that
+  is attempted rather than achieved — sending the same value does not buy the
+  same deliberation, and the section below says what it does buy.
 - Schema-failure and retry rates are logged per seat and reported as a result,
   not hidden.
 
@@ -334,22 +336,37 @@ Each provider does get its own best structured-output mechanism. Equalising the
 plumbing rather than the capability would measure API ergonomics instead of
 behaviour.
 
-### Tournament 1 did not have the effort rule enforced
+### The effort rule has never actually held
 
 That fifth bullet was documented from the start and only implemented on
-2026-07-30, after the tournament above had run. Until then the Anthropic
-adapter sent the parameter and the OpenAI-compatible adapter sent nothing, so
-Opus and Sonnet played at `low` while Terra ran at its provider default and
-GLM at near-maximum. On identical prompts that is 1,078 output tokens against
-6,122, most of the difference being reasoning.
+2026-07-30, after the tournament above had run. Until then the Anthropic adapter
+sent the parameter and the OpenAI-compatible adapter sent nothing, so Opus and
+Sonnet played at `low` while Terra ran at its provider default and GLM at
+near-maximum.
 
 **The winner of that table was deliberating several times longer per call than
 the Anthropic seats were permitted to.** The results are published as they came
 out rather than re-run, and the reasoning is in
 [docs/ADR-005-reasoning-effort-and-tournament-1.md](docs/ADR-005-reasoning-effort-and-tournament-1.md).
+
+Sending the parameter everywhere did not settle it. Measured on real tournament
+ticks on 2026-08-02, at an identical `low`:
+
+| seat | output tokens per call |
+|---|---|
+| Opus 5, Sonnet 5 | 745 – 1,534 |
+| GLM 5.2 | 8,771 – 11,814 |
+
+Anthropic honours the value; Z.ai accepts it and does not deliver a low setting.
+Nothing in the logs shows this, because a parameter that is accepted and ignored
+looks exactly like one that worked — it was caught on the invoice. Each vendor
+defines its own effort ladder, so an identical string is not an identical
+instruction, and this property cannot be enforced from our side alone.
+
 Read the standings as a result under stated conditions, not as a clean
-model-versus-model comparison. Measurements and the fix are in
-[docs/llm-seats.md](docs/llm-seats.md).
+model-versus-model comparison on the effort axis. The measurements are in
+[docs/llm-seats.md](docs/llm-seats.md) and reproduce with
+`npx tsx scripts/effort-probe.ts`.
 
 ## What is not in this repo
 

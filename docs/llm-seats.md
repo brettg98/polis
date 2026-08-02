@@ -125,11 +125,13 @@ together large enough to reverse the bottom of the table.
   cannot drift into one provider's path. This changes the timing of the second
   attempt, never the count, so the one-retry rule above still holds.
 - Same observation schema, same journal cap, same max tokens per call.
-- **Same reasoning effort.** One `REASONING_EFFORT` constant in `factory.ts`
-  (currently `low`) is sent to every seat: as `effort` to the Anthropic SDK and
-  as `reasoning_effort` on compat routes. If a provider rejects the parameter
-  the seat drops it and logs the drop, because a seat thinking without a cap is
-  not playing under the same rules as the others.
+- **Same reasoning effort — sent, but not achieved.** One `REASONING_EFFORT`
+  constant in `factory.ts` (currently `low`) goes to every seat: as `effort` to
+  the Anthropic SDK and as `reasoning_effort` on compat routes. If a provider
+  rejects the parameter the seat drops it and logs the drop. What the drop path
+  cannot catch is a provider that accepts the parameter and then does something
+  else with it, which is what Z.ai does — see below. Treat this as a property we
+  attempt, not one the code enforces.
 
 ### This rule was stated but unenforced until 2026-07-30
 
@@ -151,19 +153,109 @@ eventually exhausted it mid-tick, returning empty content and passing the tick.
 several times longer than the Anthropic seats were permitted to. Any comparison
 across that boundary has to say so.
 
-Equalising it cut GLM to ~2,200 output tokens per call, latency from ~120s to
-~24s, and cost by about 70%.
+Equalising it cut GLM's latency and cost sharply on the smoke tests it was
+measured against, and the figure recorded here at the time — ~2,200 output tokens
+per call — came from those. It does not survive a tournament tick, and the
+equalisation itself does not survive contact with Z.ai.
+
+### What the providers actually do with the parameter (measured 2026-08-02)
+
+`scripts/effort-probe.ts` replays two real tournament ticks (Kilnspire at t44 and
+t47, rebuilt from `runs/t2-full/chronicle-rot0.json`) at several effort levels.
+Output tokens per call, reasoning included in both providers' counts:
+
+| model | observation | none | minimal | low | high | max |
+|---|---|---|---|---|---|---|
+| `claude-opus-5` | quiet | — | — | 996 | 3,186 | 15,771 |
+| `claude-opus-5` | crisis | — | — | 1,534 | 4,622 | 16,000 ✗ |
+| `claude-sonnet-5` | quiet | — | — | 745 | 1,986 | 16,000 ✗ |
+| `claude-sonnet-5` | crisis | — | — | 1,224 | 5,761 | 16,000 ✗ |
+| `glm-5.2` | quiet | 524 | 547 | 8,771 | 5,733 | 9,606 |
+| `glm-5.2` | crisis | 877 | 563 | 11,814 | 10,627 | 14,330 |
+
+✗ = exhausted the 16,000-token ceiling and returned no usable action.
+
+Three things follow.
+
+**Anthropic honours it.** The ladder is monotonic and steep on both models and
+both ticks. Those seats really were capped.
+
+**Z.ai does not deliver a low setting.** GLM at `low` spends 8,771–11,814 output
+tokens where Opus at `low` spends 996–1,534 — six to nine times, at the value the
+fairness rule takes for the floor. Z.ai's reference says `low` and `medium` are
+remapped to `high` on glm-5.2; measured, `low` ran *above* `high` in both ticks
+(by 53% and 11%), which is one call per cell against a model emitting thousands of
+reasoning tokens and so cannot settle whether the reference is wrong. It does not
+need to be settled. Either way `low` is not a floor on this route, and the seat
+sees no error because the parameter is accepted rather than rejected.
+
+**`max` is out of reach at the current ceiling.** Three of four Anthropic `max`
+calls hit 16,000 tokens and returned nothing parseable — the same failure GLM hit
+at t74 of rotation 1, which the engine records as a defection the city never
+chose. Sweeping `max` means raising the output ceiling first, and the ceiling is
+itself one of the equalised properties.
+
+### Turning GLM's thinking off, three ways
+
+Z.ai offers three settings documented as skipping thinking: `reasoning_effort`
+of `none` or `minimal`, and a separate `thinking: {"type": "disabled"}` field
+that is not a rung on the effort ladder at all. All three were measured on the
+same two ticks:
+
+Five calls per cell, mean ± sd. The Anthropic seats at `low` are the target the
+GLM settings are being matched against, so they carry the same repeat count:
+
+| seat | quiet | crisis | slope | t (tick response) |
+|---|---|---|---|---|
+| Opus 5 at `low` | 877 ± 68 | 1,568 ± 380 | +79% | 4.00 |
+| Sonnet 5 at `low` | 754 ± 99 | 1,194 ± 362 | +58% | 2.62 |
+| GLM `none` | 604 ± 91 | 860 ± 187 | +42% | 2.75 |
+| GLM `disabled` | 577 ± 78 | 685 ± 106 | +19% | 1.83 |
+| GLM `minimal` | 626 ± 78 | 652 ± 128 | +4% | 0.39 |
+
+**No GLM setting actually matches.** Every off-switch sits below both Anthropic
+seats on both ticks, and mostly by a comfortable margin (Welch t from -1.83 to
+-6.47 across the six setting-by-seat pairs). What is on offer is not parity but a
+much smaller miss: GLM at `low` runs 10.0x Opus on the quiet tick and 7.5x on the
+crisis one, where GLM at `none` runs 1.45x and 1.82x under the widest seat. That
+is the trade — from an order of magnitude over to under a factor of two under.
+
+**The three off-switches are indistinguishable by level.** On the quiet tick
+every pairwise Welch |t| ≤ 1.0; on the crisis tick nothing clears significance
+either (`none` vs `minimal` t=2.04, `none` vs `disabled` t=1.82). Run-to-run
+spread is 12–22% of the mean. An earlier reading of single samples treated the
+`none`/`minimal` gap as real; it does not survive repeats.
+
+**They separate on the response to tick difficulty, and that is the useful axis.**
+Both Anthropic seats do materially more work on the harder tick (t=4.00 and
+t=2.62). `none` does too (t=2.75) at a slope in the same regime. `minimal` does
+not (t=0.39, flat on two independent passes), and `disabled` is ambiguous
+(t=1.83). A seat pinned flat is not playing the same game even at a matching
+token count, and the crisis ticks are where the behaviour this benchmark measures
+lives.
+
+On that basis `none` is the closest available match: nearest on the crisis tick
+and the only off-switch whose difficulty response looks like the Anthropic seats'.
+
+One thing these numbers cannot settle: `output_tokens` does not separate
+reasoning from action text on the Z.ai route, so whether `none`'s extra
+crisis-tick output is thinking or a longer journal is unresolved.
+
+The consequence for the fairness rule is in
+`ADR-005-reasoning-effort-and-tournament-1.md`.
 
 ## Cost controls
 
 - Log every call: prompt, response, token usage, latency. This is both the
   replay record and the cost ledger.
 - Per-run token budget guard: abort past a configurable ceiling.
-- Reasoning effort is `low` for every seat (see the fairness rules above). It is
-  also the single biggest cost lever: GLM's spend is almost entirely reasoning
-  tokens, and capping it cut a run's cost by ~70% and its wall time by ~5x.
-  Effort level remains an experimental variable worth sweeping — but sweep it
-  for all seats at once, never one provider at a time.
+- Reasoning effort is `low` for every seat (see the fairness rules above), which
+  Anthropic honours and Z.ai does not. It is still the single biggest cost lever:
+  GLM's spend is almost entirely reasoning tokens, and on the probe above GLM at
+  `minimal` costs a sixteenth of GLM at `low`. Effort remains an experimental
+  variable worth sweeping — but sweep it for all seats at once, never one
+  provider at a time, and sweep against measured output tokens rather than the
+  label, because the label does not mean the same thing to two vendors.
 - Estimated ~$2–20 per 100-tick 4-seat run depending on model tier; negotiate
   subrounds roughly double it. Parallel seeds share the prompt cache within a
   provider.
