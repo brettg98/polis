@@ -66,7 +66,7 @@ console.log('\nCase 5: both adapters use the same policy');
 // differ by provider, and the way that breaks is someone hand-rolling a wait
 // in one adapter.
 const llmDir = path.join(import.meta.dirname, '..', 'src', 'llm');
-for (const file of ['anthropicSeat.ts', 'openaiCompatSeat.ts']) {
+for (const file of ['anthropicSeat.ts', 'chatCompletionsSeat.ts']) {
   const src = fs.readFileSync(path.join(llmDir, file), 'utf8');
   check(`${file} calls the shared helper`, /retryDelayMs\(/.test(src), true);
   check(`${file} has no hand-rolled wait`, /setTimeout\(/.test(src), false);

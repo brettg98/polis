@@ -146,7 +146,7 @@ export class AnthropicSeat implements Seat {
         feedback = String(err).slice(0, 600);
         if (attempt === 0) {
           this.stats.retries++;
-          // Identical policy in openaiCompatSeat.ts; both call the same helper
+          // Identical policy in chatCompletionsSeat.ts; both call the same helper
           // so no provider gets a longer grace period than another.
           const wait = retryDelayMs(err);
           if (wait > 0) {

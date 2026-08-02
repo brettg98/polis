@@ -5,9 +5,11 @@ Read before building the provider adapters.
 ## Structure
 
 - Two adapters cover everything: `AnthropicSeat` (Anthropic SDK) and
-  `OpenAICompatSeat` (plain fetch against any OpenAI-compatible endpoint —
-  Z.ai direct, the OpenCode Zen gateway, OpenAI direct). Shared prompt
-  assembly in `prompt.ts`; only the transport differs.
+  `ChatCompletionsSeat` (plain fetch against anything speaking
+  `/chat/completions` — Z.ai direct, OpenAI direct, the OpenCode Zen gateway).
+  The second is named for a protocol rather than a vendor, because it serves
+  three and OpenAI is not the one it serves most. Shared prompt assembly in
+  `prompt.ts`; only the transport differs.
 - Seat specs are strings via `factory.ts` (`anthropic:claude-opus-5`,
   `zai:glm-5.2`, `opencode:<gpt-model>`, `openai:<model>`) so lineups are
   config, not code.

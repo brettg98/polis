@@ -6,13 +6,13 @@ import { SYSTEM_PROMPT, observationToMessage } from './prompt';
 import { validateSeatAction } from './validate';
 import { ProviderError, retryAfterFrom, retryDelayMs, sleep } from './backoff';
 
-export interface CompatPrices {
+export interface ChatCompletionsPrices {
   input: number; // $/MTok
   output: number;
   cachedRead?: number; // $/MTok for cached prompt tokens; falls back to input price
 }
 
-export interface OpenAICompatSeatOptions {
+export interface ChatCompletionsSeatOptions {
   model: string;
   baseUrl: string; // e.g. https://opencode.ai/zen/v1 or https://api.openai.com/v1
   apiKeyEnv: string; // env var holding the key (resolved at launch, never stored)
@@ -24,35 +24,42 @@ export interface OpenAICompatSeatOptions {
   maxTokensPerCall?: number;
   tokenBudget?: number;
   logFile?: string;
-  prices?: CompatPrices;
+  prices?: ChatCompletionsPrices;
 }
 
-export interface CompatUsageTotals {
+export interface ChatCompletionsUsageTotals {
   calls: number;
   inputTokens: number;
   outputTokens: number;
   cachedTokens: number;
 }
 
-// One adapter for every OpenAI-compatible provider (OpenCode Zen, OpenAI
-// direct, any future gateway). Capability differences are probed once and
-// remembered: response_format json_schema → json_object fallback, and
-// max_tokens → max_completion_tokens for reasoning-model APIs. The fairness
-// retry rule (one retry, then pass) is identical to the Anthropic seat.
-export class OpenAICompatSeat implements Seat {
+// Defined by a protocol rather than a vendor: anything that speaks
+// /chat/completions. Three providers use it today and more can without touching
+// this file, which is why it is not named after any of them — `AnthropicSeat`
+// next door genuinely is vendor-specific (that vendor's SDK, its Messages API),
+// and the naming should make that distinction visible rather than hide it.
+//
+// Speaking the protocol is not the same as behaving alike. Capability
+// differences are probed once and remembered: response_format json_schema →
+// json_object fallback, and max_tokens → max_completion_tokens for
+// reasoning-model APIs. Providers also diverge in what they honour versus
+// merely accept — see EFFORT in factory.ts. The fairness retry rule (one retry,
+// then pass) is identical to the Anthropic seat.
+export class ChatCompletionsSeat implements Seat {
   readonly cityId: string;
   readonly label: string;
-  readonly usage: CompatUsageTotals = { calls: 0, inputTokens: 0, outputTokens: 0, cachedTokens: 0 };
+  readonly usage: ChatCompletionsUsageTotals = { calls: 0, inputTokens: 0, outputTokens: 0, cachedTokens: 0 };
   readonly stats = { retries: 0, failures: 0, adaptations: 0, latencies: [] as number[] };
 
-  private opts: OpenAICompatSeatOptions;
+  private opts: ChatCompletionsSeatOptions;
   private apiKey: string;
   private mode: 'json_schema' | 'json_object' = 'json_schema';
   private tokenParam: 'max_tokens' | 'max_completion_tokens' = 'max_tokens';
   private sendEffort = true; // cleared if the provider rejects reasoning_effort
   private budgetWarned = false;
 
-  constructor(cityId: string, opts: OpenAICompatSeatOptions) {
+  constructor(cityId: string, opts: ChatCompletionsSeatOptions) {
     this.cityId = cityId;
     this.opts = opts;
     this.label = `${new URL(opts.baseUrl).hostname}:${opts.model}`;

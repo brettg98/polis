@@ -1,12 +1,12 @@
 import path from 'node:path';
 import { AnthropicSeat } from './anthropicSeat';
-import { OpenAICompatSeat, type CompatPrices } from './openaiCompatSeat';
+import { ChatCompletionsSeat, type ChatCompletionsPrices } from './chatCompletionsSeat';
 
-export type LLMSeat = AnthropicSeat | OpenAICompatSeat;
+export type LLMSeat = AnthropicSeat | ChatCompletionsSeat;
 
 // $/MTok for gateway models where we know pricing (cost readouts only;
 // unknown models report $0 and the JSONL log still has exact token counts).
-const OPENCODE_PRICES: Record<string, CompatPrices> = {
+const OPENCODE_PRICES: Record<string, ChatCompletionsPrices> = {
   'glm-5.2': { input: 1.4, output: 4.4, cachedRead: 0.26 },
   'gpt-5.6-sol': { input: 5, output: 30, cachedRead: 0.5 },
   'gpt-5.6-terra': { input: 2.5, output: 15, cachedRead: 0.25 },
@@ -21,7 +21,7 @@ const OPENCODE_PRICES: Record<string, CompatPrices> = {
 // reported usage.
 // These are the standard rates. Requests over 272K input tokens bill at double;
 // a POLIS observation is ~4K, so that tier is unreachable here.
-const OPENAI_PRICES: Record<string, CompatPrices> = {
+const OPENAI_PRICES: Record<string, ChatCompletionsPrices> = {
   'gpt-5.6-sol': { input: 5, output: 30, cachedRead: 0.5 },
   'gpt-5.6-terra': { input: 2, output: 12, cachedRead: 0.2 },
   'gpt-5.6-luna': { input: 0.2, output: 1.2, cachedRead: 0.02 },
@@ -30,7 +30,7 @@ const OPENAI_PRICES: Record<string, CompatPrices> = {
 // Z.ai list pricing. Identical to what the gateway charges for the same model,
 // because the gateway resells GLM at cost — which is also why it caps
 // throughput on token-hungry models and this route exists at all.
-const ZAI_PRICES: Record<string, CompatPrices> = {
+const ZAI_PRICES: Record<string, ChatCompletionsPrices> = {
   'glm-5.2': { input: 1.4, output: 4.4, cachedRead: 0.26 },
   'glm-5.1': { input: 1.4, output: 4.4, cachedRead: 0.26 },
   'glm-5': { input: 1.4, output: 4.4, cachedRead: 0.26 },
@@ -111,7 +111,7 @@ export function createLLMSeat(spec: string, cityId: string, opts: SeatFactoryOpt
         logFile,
       });
     case 'opencode':
-      return new OpenAICompatSeat(cityId, {
+      return new ChatCompletionsSeat(cityId, {
         model,
         baseUrl: 'https://opencode.ai/zen/v1',
         apiKeyEnv: 'OPENCODE_API_KEY',
@@ -121,7 +121,7 @@ export function createLLMSeat(spec: string, cityId: string, opts: SeatFactoryOpt
         prices: OPENCODE_PRICES[model],
       });
     case 'zai':
-      return new OpenAICompatSeat(cityId, {
+      return new ChatCompletionsSeat(cityId, {
         model,
         baseUrl: 'https://api.z.ai/api/paas/v4',
         apiKeyEnv: 'ZAI_API_KEY',
@@ -131,7 +131,7 @@ export function createLLMSeat(spec: string, cityId: string, opts: SeatFactoryOpt
         prices: ZAI_PRICES[model],
       });
     case 'openai':
-      return new OpenAICompatSeat(cityId, {
+      return new ChatCompletionsSeat(cityId, {
         model,
         baseUrl: 'https://api.openai.com/v1',
         apiKeyEnv: 'OPENAI_API_KEY',
