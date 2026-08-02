@@ -338,8 +338,9 @@ The comparison is the point, so the rules are identical across providers:
   than by sending every provider the same effort label. The label approach was
   tried and abandoned: it bought ~750 output tokens per call on Anthropic and
   ~8,800 on Z.ai from the identical string. `EFFORT` in `src/llm/factory.ts`
-  carries a per-provider value, each backed by a measurement. The section below
-  has the numbers.
+  carries a per-provider value, each backed by a measurement. The bound gates
+  which settings may be used; a completed run that breaches it is published with
+  the deviation disclosed rather than re-run. The section below has the numbers.
 - Schema-failure and retry rates are logged per seat and reported as a result,
   not hidden.
 

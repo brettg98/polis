@@ -140,12 +140,21 @@ together large enough to reverse the bottom of the table.
   measurement rather than a preference.
 
   The property the benchmark holds instead is a bound on **measured output
-  tokens**: no seat's mean may exceed another's by more than **3x** on the same
-  observation, checked before a tournament runs and again from the call logs
-  afterwards. Chosen at 3x because parity is not reachable — every GLM setting
-  that gets near the Anthropic seats lands 1.4–2.4x *below* them, and Z.ai's
-  ladder has nothing in between. A bound is enforceable and checkable; parity
-  would just be the old claim with new wording.
+  tokens**: no seat's mean may exceed another's by more than **3x**. Over a run
+  that means per-seat mean output tokens per call **discarding ticks 1–20**,
+  which are the opening transient rather than the steady state — output settles
+  by roughly t20–40 and is flat afterwards, so a short run measures the wrong
+  thing (ADR-006, 2026-08-02 amendment).
+
+  Chosen at 3x because parity is not reachable — every GLM setting that gets near
+  the Anthropic seats lands 1.4–2.4x *below* them, and Z.ai's ladder has nothing
+  in between. A bound is enforceable and checkable; parity would just be the old
+  claim with new wording.
+
+  **The bound gates settings, not results.** A configuration whose predicted
+  spread exceeds 3x is not run. A completed run that breaches is published as it
+  came out with the deviation disclosed, following ADR-005 — re-running
+  non-deterministic models yields a second sample rather than a correction.
 
   **The bound as it currently stands**, mean ± sd over the same two ticks, at
   each seat's configured setting:

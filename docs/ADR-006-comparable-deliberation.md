@@ -39,7 +39,9 @@ first and the second, and the Anthropic seats at `low` sit in that gap.
 
 **The rule "identical reasoning effort across seats" is withdrawn. It is replaced
 by a bound on measured output tokens: no seat's mean may exceed another's by more
-than 3x on the same observation.**
+than 3x on the same observation.** (The metric is stated precisely in the
+2026-08-02 amendment below; "the same observation" was written against a single
+probe tick and does not define itself over a run.)
 
 `REASONING_EFFORT`, one constant for every seat, becomes `EFFORT`, a per-provider
 map in `src/llm/factory.ts`. Each entry is a calibration claim about that
@@ -140,6 +142,67 @@ default for lineups.
 With that, every seat in the standard lineup is measured and the bound holds at
 1.58x on a quiet tick and 1.81x on a crisis one — comfortably inside 3x, with the
 margin absorbed by run-to-run variance rather than by the choice of settings.
+
+## Amendment, 2026-08-02: what the bound measures, and what a breach means
+
+The decision above set the bound "on the same observation." That phrasing came
+from the probe, which replays one frozen tick. A tournament has a hundred
+observations, so as written it did not pick out anything — and the same 25-tick
+test run reads 1.66x, 1.92x or worse depending on which reading is taken. A rule
+with an ambiguous metric gets interpreted after the fact by whoever is holding a
+number they already have.
+
+### The metric
+
+**Per-seat mean output tokens per call across a run, discarding ticks 1–20.**
+The bound holds when no seat's figure exceeds another's by more than 3x.
+
+Ticks 1–20 are discarded because they are not the steady state. Measured across
+tournament 2's four rotations of 100 ticks:
+
+| seat | t1–20 | t21–40 | t41–60 | t61–80 | t81–100 |
+|---|---|---|---|---|---|
+| Opus 5 | 1,012 | 1,082 | 1,037 | 985 | 853 |
+| Sonnet 5 | 880 | 833 | 863 | 1,024 | 861 |
+| Terra | 789 | 719 | 692 | 676 | 721 |
+| GLM 5.2 | 6,107 | 6,603 | 7,186 | 6,883 | 5,670 |
+
+No seat grows over a full run. Output per call settles by roughly t20–40 and is
+flat or slightly declining after that — the journal cap and a stabilising ledger,
+probably, with late decline partly from cities dying and simplifying the
+decision. (Read each row's shape rather than the cross-seat gaps: GLM's figures
+predate this ADR and Terra's are gateway-underreported. Opus and Sonnet are
+directly comparable to the current configuration, and their per-window ratio
+stays within 0.96–1.30 across the full run.)
+
+A consequence worth stating because it is easy to get wrong: **a short run
+measures the transient, not the steady state.** A 25-tick run's token profile is
+not a preview of a 100-tick run's. Any check against this bound needs enough
+ticks past the opening window to be meaningful.
+
+### What a breach means
+
+**The bound gates settings. It does not gate results.**
+
+Before a run, each seat's setting is chosen against a measurement (the probe),
+and a configuration whose predicted spread exceeds 3x is not run. That is the
+enforceable half, and it is where the rule does its work.
+
+After a run, the bound is measured again from the call logs and reported. A
+completed run that breaches is **published as it came out, with the deviation
+disclosed next to the results** — not discarded, not re-run.
+
+This follows ADR-005's precedent rather than inventing a new one. Re-running
+non-deterministic models produces a second sample, not a correction, and a
+published result with a clear account of its flaw is a better artifact than a
+quietly replaced table. It also keeps the project honest about what it can
+enforce: we choose settings, providers choose behaviour, and a rule that claimed
+to govern the second would be the old rule again under a new name.
+
+Rejected: **aborting mid-run on breach** (needs live checking rather than
+post-run analysis, and discards a partial run that may still be worth reading);
+**re-tuning and re-running** (ADR-005's argument applies unchanged); **disclosure
+with no pre-run gate** (gives up the half that actually works).
 
 ## Revisit when
 
