@@ -315,3 +315,83 @@ only stockpile under the gate" is not proof that building caused the shortfall:
 Brinemark produces no materials and would be short regardless. Kilnspire is the
 one city where the causation is legible in the numbers, because it spent itself
 across the threshold from a surplus it had earned.
+
+## Second addendum, 2026-08-03: the full tournament confirms it, and the ceiling turns out to be decorative
+
+The addendum above decided #10 from one unrotated rotation and listed the
+confound it could not remove. Tournament 2 finished afterwards, and with seat
+rotation the confound is gone. Measured across `runs/t2-full` (4 rotations ×
+100 ticks) and `runs/t3-test60` (1 rotation × 60 ticks), 20 city-runs in total,
+against `runs/tournament-main` (4 rotations × 100 ticks) for the pre-build
+comparison.
+
+The gate is at `sim.ts:286` now; the build phase moved it from the line 235 the
+addendum above cites.
+
+Method: for every city-tick, take the end-of-tick stockpiles the gate tested,
+skip ticks where the city was in ruins, was starving, or was already at its
+ceiling, and classify the rest as grown or gate-blocked. Reconstructing growth
+from the recorded stockpiles agrees with the recorded population on 1,472 of
+1,472 eligible city-ticks, so the classification is the engine's own, not an
+approximation of it.
+
+### The decision holds, and the reason is stronger than "leave it and observe"
+
+| | tournament 1, no build | tournament 2, build |
+|---|---|---|
+| city-runs reaching population 150 | 10 of 16 | 0 of 16 |
+| mean peak population | 138.1 | 117.0 |
+| eligible ticks where growth was gate-blocked | 46.3% | 81.8% |
+| ticks spent already at the ceiling | 423 | 0 |
+| materials the sole stockpile under the gate | 84.2% of blocked ticks | 78.9% |
+
+Issue #10 asked whether the gate gets relatively easier as a city grows, since
+50 units is five turns of cover at population 100 and under three at 175, and
+whether that offsets the shrinking cushion expansion relies on for its downside.
+
+The premise never engages. The relative easing only starts to matter above
+population 150, and across all five completed rotations the highest population
+any city reached is 143.1. Not one city-run exceeded even its *starting* ceiling
+of 150, let alone a raised one. The block rate does fall as population rises
+(91.9% below 100, 80.2% at 100–124, 69.2% at 125–149), but a city at 125 is a
+city trading well, and trading well is what fills stockpiles, so that gradient
+cannot be read as the gate loosening on its own.
+
+Option 2, making the gate proportional to consumption, would tighten a
+constraint that already blocks four growth opportunities in five. On this
+evidence it is the wrong direction. #10 closes on option 1, as the addendum
+above decided.
+
+### What the rotated data adds: the ceiling is not reachable
+
+Twenty of twenty city-runs spent materials on ceiling. 4,086 materials in total.
+None of them reached a population that required any of it.
+
+Materials was short on 93.6% of gate-blocked ticks and was the only resource
+short on 80.5%, holding across every seat and every model rather than only in
+the cities that produce none. That is the same interaction the addendum above
+identified, now measured with the seats rotated: the currency build spends is
+the resource that gates growth, so a city funds a ceiling by moving itself away
+from the condition that would let it climb.
+
+The addendum above read this as the mechanic discriminating between cities that
+can afford it and cities that cannot, and that reading stands. What the rotated
+data adds is that the discrimination happens entirely below the old cap. Nobody
+is buying headroom and filling part of it. Everybody is buying headroom and
+filling none of it, because the binding constraint on population was never the
+ceiling.
+
+### What this does not establish
+
+Tournament 1 and tournament 2 differ in the build action, the prompt, and the
+ceiling arithmetic at once, which decision 8 accepted deliberately. So "build
+lowered the board" is a hypothesis with a mechanism and an association behind
+it, not a demonstrated cause. A paired run under one ruleset is what would settle
+it, and none exists.
+
+Against this ADR's own success criterion the mechanic still passes: models
+diverge sharply in how they use build, which is what it was added to measure.
+What is now in question is narrower and is a tuning matter rather than a design
+one, so it goes to an issue rather than being decided here: a purchase that
+cannot change any outcome is not a risk decision, and reading these runs as
+evidence about risk appetite assumes it was.
