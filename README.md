@@ -375,10 +375,17 @@ Nothing in the logs shows this, because a parameter that is accepted and ignored
 looks exactly like one that worked — it was caught on the invoice. **Tournaments
 1 and 2 both ran under this, and GLM won both.**
 
-Since 2026-08-02 the GLM route sends `none` instead, which puts it at 591–863
-output tokens per call, and the rule is a measured bound rather than a shared
-label (ADR-006). That is not parity: nothing on Z.ai's ladder sits level with the
-Anthropic seats, so GLM now runs somewhat under them instead of far over.
+Since 2026-08-02 the GLM route sends `none` instead, and the rule is a measured
+bound rather than a shared label (ADR-006). Over a full run the four seats now
+sit within **1.41x** of each other on output tokens per call — GLM 1,246, Opus
+1,198, Sonnet 922, Terra 885.
+
+One thing to read carefully there. GLM at `none` genuinely does not think —
+`reasoning_tokens: 0` on every call — so all of its output is the action and the
+journal it writes, and it writes longer journals than the others. It spends the
+most tokens of any seat while deliberating the least. Output volume is what can
+be measured across vendors; it is not the same quantity as deliberation, and on
+this configuration the two point in opposite directions.
 
 Read the standings as a result under stated conditions, not as a clean
 model-versus-model comparison on the effort axis. The measurements are in

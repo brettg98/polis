@@ -79,10 +79,11 @@ point: it is weaker and true, where the old rule was stronger and false.
   runs had GLM deliberating roughly ten times the Anthropic seats; this changes
   it. That is a third reason those runs do not line up, alongside the build
   mechanic and the tournament-1 disclosure already in ADR-005.
-- **GLM is not level with the Anthropic seats, it is under them** — 591–863
-  output tokens against 753–1,563. The asymmetry is smaller and points the other
-  way. Any writeup comparing GLM to the Anthropic models has to say so, and the
-  same disclosure discipline ADR-005 established applies.
+- ~~**GLM is not level with the Anthropic seats, it is under them** — 591–863
+  output tokens against 753–1,563.~~ **Wrong under run conditions.** Corrected in
+  the second 2026-08-02 amendment below: in a real 60-tick run GLM is the
+  *highest* seat, not the lowest. The probe figure stands for the frozen tick it
+  measured; it does not predict a run.
 - **The bound has to be checked, not assumed.** Before a tournament runs, and
   again from the call logs afterwards. A provider can change its mapping without
   telling us, and the failure is silent by construction.
@@ -210,7 +211,45 @@ post-run analysis, and discards a partial run that may still be worth reading);
 **re-tuning and re-running** (ADR-005's argument applies unchanged); **disclosure
 with no pre-run gate** (gives up the half that actually works).
 
-## Revisit when
+## Second amendment, 2026-08-02: what a real run showed, and what the bound is not
+
+Everything above was measured with the probe, which replays frozen ticks. A
+60-tick run of the full lineup under these rules gives a different picture in two
+ways that matter.
+
+**The bound holds, and this is the first run to certify it.** `npm run bound`
+reports **1.41x**, well inside the limit:
+
+| seat | setting | probe predicted | run, post-transient |
+|---|---|---|---|
+| GLM 5.2 | `none` | 591–863 | **1,246** |
+| Opus 5 | `low` | 897–1,563 | 1,198 |
+| Sonnet 5 | `low` | 753–1,199 | 922 |
+| GPT 5.6 Terra | `low` | 567–899 | 885 |
+
+**GLM is the highest seat, not the lowest.** The consequence bullet above said
+the opposite and told a writeup to disclose it that way; that would have produced
+a wrong disclosure. The probe under-predicted GLM by roughly half. It did not
+climb without limit — 1,029 → 1,413 → 1,079 across the three windows, peaking and
+falling back — so this is a level error, not a runaway.
+
+**Why, and it is not what it looks like.** GLM at `none` genuinely skips
+thinking: `reasoning_tokens: 0` on all 61 calls of the run, verified from the
+logs. The parameter works. Its output is therefore *entirely product* — the
+action JSON plus a journal that runs about 1,400 characters against Opus's 900,
+Sonnet's 965 and Terra's 454. GLM writes more, and none of it is deliberation.
+
+**So the bound measures output volume, not deliberation, and for a
+thinking-disabled seat those are different things.** The rule still does the job
+it was built for: it is enforceable, checkable, and it caught a 10x asymmetry
+that the old rule could not express. But a reader should not take "GLM spends the
+most tokens" as "GLM deliberates the most" — on this configuration it deliberates
+least, by construction, and spends the most anyway. Any writeup that quotes
+per-seat token figures needs that sentence next to them.
+
+A hypothesis worth recording as *rejected*: the climb was not journal growth
+toward the 4,000-character cap. Journals are flat across the run for every seat
+and none approaches the cap.
 
 The output ceiling changes, a provider's documented mapping changes, or a seat's
 measured band moves — any of which can break the bound silently. Also if the
