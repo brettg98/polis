@@ -17,8 +17,14 @@ solving it that way adds nothing to measure.
 
 What this ADR buys instead is a decision. Cities spend materials to raise their
 own ceiling, and the point is to see how differently models handle that bet —
-specifically how risk-averse each one is. Decided in a grill-me session,
+~~specifically how risk-averse each one is~~. Decided in a grill-me session,
 2026-07-29.
+
+> **The risk-appetite half of that goal is withdrawn (2026-08-04, #28).** No
+> city in any completed run has reached a ceiling it bought, so the spend never
+> carried the risk it was meant to price. What survives is the first half: how
+> differently models handle the bet, which the runs do show. See the third
+> amendment.
 
 ## Decision
 
@@ -148,8 +154,10 @@ consumption (0.2 against 0.1):
   Kilnspire 18.8 shipped at 79.6% efficiency. The world runs about 6 materials a
   turn short of holding every city at 150.
 - **So building cannot be funded from spare production. There isn't any.** It
-  comes out of the warehouse, which is what makes it a risk decision, and
-  `ticksUntilShortage` already shows the seat its exposure worsening.
+  comes out of the warehouse, which is what was expected to make it a risk
+  decision, and `ticksUntilShortage` already shows the seat its exposure
+  worsening. (The spend is real and the exposure is real; what did not follow is
+  a payoff to weigh them against — #28, third amendment.)
 - The one real window is **the Harrow Vein** (turns 34–45), which lifts
   Greyharrow's materials 60% for twelve turns — roughly 216 extra materials, in
   one city's hands, with a nine-turn private head start. That funds about three
@@ -470,3 +478,36 @@ a raised ceiling within reach of a 100-tick run on its own.
 
 **Comparability.** Tournament 3 is not comparable to tournaments 1 or 2 on
 population. This is the second deliberate break, after decision 8.
+
+## Third amendment, 2026-08-04: the risk-appetite claim is withdrawn (#28)
+
+Decided by Brett, 2026-08-04, taking option 1 of #28.
+
+**What is withdrawn.** This ADR's stated goal was to see how risk-averse each
+model is. That claim is dropped. It required a purchased ceiling to carry a real
+trade-off — spend now, grow into it later, and be poorer if a shock lands
+first — and the second half never happened. Across 20 city-runs no city reached
+a ceiling it bought, so the runs record which models spent on a non-functional
+item, which is a different and weaker claim. Any sentence in the writeup reading
+model behaviour here as evidence about risk tolerance should be cut.
+
+Confirmed again after the gate change of #29: in `runs/t3-gate60`, two cities
+bought ceiling to 200 and finished at 76 and 125, with ceiling utilisation of
+38%, 63%, 42% and 73%.
+
+**What stands.** Models diverge sharply and legibly in how they use build, which
+is this ADR's own success criterion from decision 8 and is worth publishing on
+its own. The measured spending styles are real: Opus dribbling across many
+ticks, Sonnet spending steadily and largest, Terra not building at all in
+`t3-gate60`, GLM banking 34 materials for fifty ticks without ever affording the
+first 50-material step. The ordering-of-phases result from decision 1 also
+stands, and was confirmed against real models — Greyharrow's overreach shorted
+its own build every tick, never its partners.
+
+**What was rejected, and why now.** Making the ceiling reachable, or decoupling
+the build currency from the growth gate, both change `src/engine/` and would
+make a third tournament incomparable to the first two for a second reason.
+Neither is refused on merit; the decoupling idea is the stronger design and is
+held as a tournament-4 question. With the writeup due 2026-08-31 and two
+tournaments already run, correcting the claim costs nothing and changing the
+mechanic costs comparability.
