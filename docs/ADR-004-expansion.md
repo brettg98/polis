@@ -511,3 +511,61 @@ Neither is refused on merit; the decoupling idea is the stronger design and is
 held as a tournament-4 question. With the writeup due 2026-08-31 and two
 tournaments already run, correcting the claim costs nothing and changing the
 mechanic costs comparability.
+
+## Fourth amendment, 2026-08-04: a city has now passed the base ceiling (#34)
+
+The third amendment above says no city in any completed run has reached a
+ceiling it bought. **That is no longer true**, and it stopped being true within
+hours of being written. Correcting it here rather than editing it, because it
+was an accurate statement of 28 seat-runs at the time.
+
+`runs/t3-gatevisible60` — same seed, scenario, lineup and seat assignment as
+`runs/t3-kimi60`, differing only in the prompt change and observation field from
+#34. Terra's Kilnspire **peaked at 158 and finished at 156**. Every prior
+city-run in this project's history topped out at 146, and none had exceeded the
+base ceiling of 150.
+
+| model | seat | population, gate hidden → visible | reliability | ceiling used |
+|---|---|---|---|---|
+| Terra | Kilnspire | 146 → **156** | 78% → 82% | 78% |
+| Kimi | Greyharrow | 138 → **146** | 82% → **98%** | 73% |
+| Opus | Brinemark | 62 → **94** | 65% → 81% | 47% |
+| GLM | Emberfall | 35 → **41** | 85% → 94% | 23% |
+
+### What this changes about the mechanic
+
+**The ceiling is not decorative. It is conditional on the seat.** Terra and Opus
+made the same purchase on the same tick — a first step at t6, with roughly 46
+points of unused headroom under a cap of 150. Terra grew through the base
+ceiling and used what it bought. Opus fell from 105 to 94 and used 47%. The
+difference is that Kilnspire produces materials, so it could fund the ceiling
+and keep clearing the growth floor; Brinemark produces none and had to choose.
+
+So the finding in the second addendum — that build is a materials sink which
+suppresses the growth it sells — holds for importing seats and fails for
+producing ones. It was measured on a fleet where nothing had ever reached the
+cap, which made a conditional effect look absolute.
+
+### What is properly established, and what is not
+
+Established, because it is visible in the journals rather than inferred from a
+population column: seats read the new `growthFloor` field and reason with it.
+GLM held a build while *"Mats still below growthFloor 26.9"*; Terra withheld a
+delivery *"to preserve reserve/growth floor"*, choosing a diplomatic cost over
+dropping below the line. All four seats converged on spending exactly 125
+materials, against 155 / 50 / 25 / 140 in the paired run.
+
+**Not established: that the prompt change caused the population rise.** All four
+seats improved on population and reliability, which looks like eight independent
+measures agreeing and is not — the seats share one economy, so a better world
+lifts everyone together. This is one run against one run, in a project that has
+already recorded run-to-run variance reversing two cities and killing one that
+survived elsewhere. Treat the population figures as a single sample and the
+journal behaviour as the finding.
+
+### Still standing
+
+Nothing here reopens the engine. #28's decision to leave the mechanic alone is
+unchanged, and the risk-appetite claim stays withdrawn: a purchase whose payoff
+depends on which chair you occupy measures the chair at least as much as the
+occupant, which is this project's oldest result.

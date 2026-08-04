@@ -149,6 +149,12 @@ export interface SeatObservation {
     ceiling: number;
     buildProgress: number; // materials banked toward the next ceiling step
     nextStepCost: number; // materials still needed to complete that step
+    // Every resource must stay above this after consumption or population does
+    // not grow that tick. Added 2026-08-04 (#34): the ceiling and the step cost
+    // were visible from the start while this, the constraint that actually caps
+    // population, was not — so seats optimised the price they could see. It
+    // scales with population, so it is a live number rather than a constant.
+    growthFloor: number;
     unrest: number;
     status: CityStatus;
     ticksUntilShortage: Partial<Record<Resource, number>>;

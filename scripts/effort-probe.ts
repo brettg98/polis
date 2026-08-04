@@ -213,6 +213,7 @@ function buildObservation(ch: Chronicle, scenario: Scenario, cityId: string, tic
       ceiling,
       buildProgress,
       nextStepCost: Math.max(0, nextStepCostTotal - buildProgress),
+      growthFloor: cc.growthGateTicks * population * cc.consumptionPerCapita,
       unrest: 0,
       status: RESOURCES.some((r) => stockpiles[r] < 0.05) ? 'struggling' : 'alive',
       ticksUntilShortage,

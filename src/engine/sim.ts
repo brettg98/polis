@@ -437,6 +437,9 @@ export class Simulation {
         ceiling: this.ceilingOf(c),
         buildProgress: c.buildProgress,
         nextStepCost: Math.max(0, this.nextStepCost(c) - c.buildProgress),
+        // Same expression resolve() gates growth on, so the seat sees the
+        // engine's own number rather than an approximation of it.
+        growthFloor: cc.growthGateTicks * c.population * cc.consumptionPerCapita,
         unrest: c.unrest,
         status: c.status,
         ticksUntilShortage,

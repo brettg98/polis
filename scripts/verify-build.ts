@@ -209,6 +209,16 @@ await runCase({
   check('own ceiling', mine!.you.ceiling, 275);
   check('own banked materials', mine!.you.buildProgress, 40);
   check('own cost to finish the step', mine!.you.nextStepCost, 135); // 175 - 40
+
+  // #34. The seat must see the number resolve() actually gates growth on, and
+  // it must track population rather than sit at a constant — a fixed figure was
+  // the original defect (#29) and a fixed figure in the observation would
+  // reintroduce it where the seat can see it.
+  check('own growth floor at population 200', mine!.you.growthFloor, 2.5 * 200 * 0.1);
+  a.population = 100;
+  await sim.step(capture);
+  check('growth floor tracks population, not startPopulation', mine!.you.growthFloor, 2.5 * 100 * 0.1);
+  check('neighbour cannot see the growth floor', 'growthFloor' in seenHuge, false);
 }
 
 // Case 5 — the fairness layer. Every action is re-validated locally whatever
