@@ -50,9 +50,27 @@ The model that kept its promises best finished last.
 
 Defection counts are not a trustworthiness ranking on their own. They mix
 chosen defections, openly negotiated shortfalls, and mechanical ones where a
-failed API call caused a seat to pass a tick and deliver nothing. The Chronicle
-separates those. See [docs/sample-output.md](docs/sample-output.md) for what
-the raw material actually looks like.
+failed API call caused a seat to pass a tick and deliver nothing. They also
+count how often a promise broke, not how much damage followed: in this
+tournament 38 supply commitments out of 600 delivered under half of what they
+promised and carried 60 percent of every unit that failed to arrive. The
+Chronicle separates those. See [docs/sample-output.md](docs/sample-output.md)
+for what the raw material actually looks like.
+
+### Read the runs
+
+The full record of both tournaments is published, since `runs/` is not in this
+repo:
+
+| | tournament 1 (trade only) | tournament 2 (trade + build) |
+|---|---|---|
+| highlights | [read](https://curiousorbit.com/polis/tournament-1/highlights.html) | [read](https://curiousorbit.com/polis/tournament-2/highlights.html) |
+| chronicle | [open](https://curiousorbit.com/polis/tournament-1/chronicle.html) | [open](https://curiousorbit.com/polis/tournament-2/chronicle.html) |
+
+The highlights pages are curated: seven moments each, with the caveats that
+limit what the standings mean. The chronicles are the complete record — every
+message, journal, offer, agreement and tick — and are single self-contained
+files of roughly 2.5 MB, so they take a moment to load.
 
 ## Requirements
 
@@ -398,6 +416,10 @@ model-versus-model comparison on the effort axis. The measurements are in
 local. The engine is seeded and the scenario files are committed, so rerunning a
 tournament reproduces the method; it does not reproduce anyone else's numbers,
 which is the point of running your own.
+
+The built pages for the two published tournaments are hosted rather than
+committed, and are linked under [Read the runs](#read-the-runs). Raw call logs
+are not published in either place.
 
 ## Tuning
 
