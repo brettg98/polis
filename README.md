@@ -145,6 +145,7 @@ your lineup names, or the run fails on the first tick.
 | `zai:<model>` | Z.ai direct | `ZAI_API_KEY` |
 | `opencode:<model>` | OpenCode Zen gateway | `OPENCODE_API_KEY` |
 | `openai:<model>` | OpenAI direct | `OPENAI_API_KEY` |
+| `moonshot:<model>` | Moonshot direct (`.ai`, not `.cn`) | `MOONSHOT_API_KEY` |
 | `scripted:honest`, `scripted:opportunist` | no network | none |
 
 Keys are read from environment variables only. They are never committed, never

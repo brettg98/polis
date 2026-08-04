@@ -19,6 +19,7 @@
 // fairness claim nothing actually checked.
 import fs from 'node:fs';
 import path from 'node:path';
+import { outputTokensFrom } from '../src/llm/chatCompletionsSeat';
 
 // ADR-006, 2026-08-02 amendment. Output per call settles by roughly t20-40 and
 // is flat or slightly declining after, so the opening is a transient rather than
@@ -78,11 +79,18 @@ for (const f of fs.readdirSync(dir).filter((n) => n.endsWith('.jsonl'))) {
   if (!spec) continue;
   for (const line of fs.readFileSync(path.join(dir, f), 'utf8').trim().split('\n')) {
     if (!line) continue;
-    const j = JSON.parse(line) as { tick?: number; usage?: { output_tokens?: number; completion_tokens?: number } };
+    const j = JSON.parse(line) as {
+      tick?: number;
+      usage?: { output_tokens?: number; completion_tokens?: number; total_tokens?: number; prompt_tokens?: number };
+    };
     if (!j.usage || typeof j.tick !== 'number') continue;
-    // AnthropicSeat reports output_tokens, ChatCompletionsSeat completion_tokens.
-    // Both include reasoning, so they are comparable figures under different names.
-    const out = j.usage.output_tokens ?? j.usage.completion_tokens ?? 0;
+    // Derived rather than read from one field, because the field is not
+    // comparable across providers (#33). An earlier version of this line took
+    // output_tokens ?? completion_tokens and said in a comment that both include
+    // reasoning — true of the four routes it had been run against, false of
+    // Google's OpenAI-compat endpoint, which leaves reasoning out of
+    // completion_tokens entirely. See outputTokensFrom for the measurements.
+    const out = outputTokensFrom(j.usage);
     if (out > 0) (bySpec.get(spec) ?? bySpec.set(spec, []).get(spec)!).push({ tick: j.tick, out });
   }
 }

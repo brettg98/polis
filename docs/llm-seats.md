@@ -65,8 +65,13 @@ the numbers — worth stating in a writeup rather than leaving implicit.
 ## Keys and transport
 
 - Seats read API keys from environment variables only (`ANTHROPIC_API_KEY`,
-  `ZAI_API_KEY`, `OPENCODE_API_KEY`, `ANTHROPIC_MAPGEN_API_KEY`). Inject them at launch
-  from your secret manager of choice; values never touch disk or git.
+  `ZAI_API_KEY`, `OPENCODE_API_KEY`, `OPENAI_API_KEY`, `MOONSHOT_API_KEY`,
+  `ANTHROPIC_MAPGEN_API_KEY`). Inject them at launch from your secret manager of
+  choice; values never touch disk or git.
+- **Moonshot runs two platforms with separate balances.** `api.moonshot.ai` is
+  the international one and is what `moonshot:` resolves to; `api.moonshot.cn` is
+  a different account with its own credit that does not sync. A key from the
+  wrong one authenticates against nothing here.
 - Anthropic seat calls bill to the API key's Console org (metered). Check
   the org's spend limits before tournament runs; Fable map generation
   requires the org to have 30-day data retention.
@@ -145,6 +150,17 @@ together large enough to reverse the bottom of the table.
   which are the opening transient rather than the steady state — output settles
   by roughly t20–40 and is flat afterwards, so a short run measures the wrong
   thing (ADR-006, 2026-08-02 amendment).
+
+  **"Output tokens" is derived, not read from a field.** It is
+  `total_tokens − prompt_tokens` where `total_tokens` exists, falling back to
+  `output_tokens` / `completion_tokens` where it does not — the Anthropic
+  Messages API has no `total_tokens`. Reading `completion_tokens` directly is
+  wrong on at least one route: Google's OpenAI-compat endpoint keeps reasoning
+  out of it, reporting 442 where the true figure is 2,627, so the seat looks
+  more compliant the harder it thinks. Five of seven routes measured put
+  reasoning inside the field and agree with the derivation exactly; one hides it
+  in the total; the `opencode` gateway reports it nowhere and stays uncertifiable
+  (ADR-006, 2026-08-04 third amendment, #33).
 
   Chosen at 3x because parity is not reachable — every GLM setting that gets near
   the Anthropic seats lands 1.4–2.4x *below* them, and Z.ai's ladder has nothing

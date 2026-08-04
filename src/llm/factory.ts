@@ -36,6 +36,13 @@ const ZAI_PRICES: Record<string, ChatCompletionsPrices> = {
   'glm-5': { input: 1.4, output: 4.4, cachedRead: 0.26 },
 };
 
+// Moonshot list pricing, from platform.kimi.ai/docs/pricing/chat-k3. Flat, no
+// context tier. The international (.ai) and China (.cn) platforms bill from
+// separate balances and do not sync; this is the .ai one.
+const MOONSHOT_PRICES: Record<string, ChatCompletionsPrices> = {
+  'kimi-k3': { input: 3, output: 15, cachedRead: 0.3 },
+};
+
 export interface SeatFactoryOptions {
   logDir: string;
   tokenBudget?: number;
@@ -48,6 +55,7 @@ export interface SeatFactoryOptions {
 //   zai:glm-5.2                  Z.ai direct (ZAI_API_KEY)
 //   opencode:gpt-5.5             GPT via the OpenCode Zen gateway (OPENCODE_API_KEY)
 //   openai:gpt-5.5               OpenAI direct (OPENAI_API_KEY)
+//   moonshot:kimi-k3             Moonshot direct, .ai not .cn (MOONSHOT_API_KEY)
 //
 // GLM goes direct because the gateway caps it: measured at ~170 output tokens
 // per minute against the ~2,800 a rotation needs, which stalled four runs.
@@ -93,6 +101,17 @@ const EFFORT = {
   // `medium` also fits; `low` is chosen because it matches Sonnet's slope
   // exactly (+59%) and costs less.
   openai: 'low',
+  // PROVISIONAL, n=1 — the only entry here not backed by the n=5 ladder probe.
+  // kimi-k3's ladder is low/high/max with thinking permanently on, so `low` is
+  // the floor and there is nothing below it to fall back to. On the #33 fleet
+  // audit, one identical observation, it spent 323 output tokens at `low`
+  // against Terra's 324, Opus's 456 and GLM's 494 — the joint-lowest seat, not
+  // the highest, which is what the concern in #32 assumed. That predicts a
+  // 1.53x fleet spread, comfortably inside the bound, which is the pre-run
+  // check ADR-006 actually requires. Still owed: the n=5 two-tick measurement,
+  // because a probe figure is known to under-predict run conditions here (the
+  // ADR-006 second amendment records it missing GLM by roughly half).
+  moonshot: 'low',
 } as const;
 
 export function createLLMSeat(spec: string, cityId: string, opts: SeatFactoryOptions): LLMSeat {
@@ -139,6 +158,16 @@ export function createLLMSeat(spec: string, cityId: string, opts: SeatFactoryOpt
         tokenBudget: opts.tokenBudget,
         logFile,
         prices: OPENAI_PRICES[model],
+      });
+    case 'moonshot':
+      return new ChatCompletionsSeat(cityId, {
+        model,
+        baseUrl: 'https://api.moonshot.ai/v1',
+        apiKeyEnv: 'MOONSHOT_API_KEY',
+        reasoningEffort: EFFORT.moonshot,
+        tokenBudget: opts.tokenBudget,
+        logFile,
+        prices: MOONSHOT_PRICES[model],
       });
     default:
       throw new Error(`unknown provider "${provider}" in seat spec "${spec}"`);

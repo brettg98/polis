@@ -255,3 +255,56 @@ The output ceiling changes, a provider's documented mapping changes, or a seat's
 measured band moves — any of which can break the bound silently. Also if the
 `opencode` route is ever measured, since that entry is currently an assumption
 sitting in a structure that presents itself as measured.
+
+## Third amendment, 2026-08-04: the metric is derived, not read from one field (#33)
+
+The 2026-08-02 amendment above pins the metric to per-seat mean output tokens
+and `scripts/bound.ts` implemented that as `output_tokens ?? completion_tokens`,
+with a comment stating that both include reasoning. **That was true of the four
+routes it had been run against and is false in general.** Correcting it here
+rather than editing the amendment, which was right about the fleet it measured.
+
+Found while probing two new providers (#31, #32). One identical observation,
+every route this project speaks to, at each provider's low and high rung:
+
+| route | completion low → high | unaccounted low → high | reasoning declared |
+|---|---|---|---|
+| `anthropic:claude-opus-5` | 456 → 1,569 | no `total_tokens` field | in `output_tokens_details` |
+| `anthropic:claude-sonnet-5` | 380 → 1,206 | no `total_tokens` field | in `output_tokens_details` |
+| `zai:glm-5.2` | 494 → 1,434 | 0 → 0 | 0 → 1,026 |
+| `openai:gpt-5.6-terra` | 324 → 724 | 0 → 0 | 70 → 425 |
+| `moonshot:kimi-k3` | 323 → 867 | 0 → 0 | 87 → 511 |
+| `google:gemini-3.5-flash` | 397 → 442 | **0 → 2,185** | none reported |
+| `opencode:gpt-5.6-terra` | **613 → 479** | 0 → 0 | none reported |
+
+`unaccounted` is `total_tokens − prompt_tokens − completion_tokens`.
+
+Three behaviours, not one. Five routes report reasoning inside the output figure
+and the metric was correct for them. **Google's OpenAI-compat endpoint leaves it
+out entirely** — `completion_tokens` barely moves across the whole ladder while
+the unaccounted pile grows to 2,185, so the bound would have read 442 where the
+truth is 2,627. A six-fold under-report, in the direction that makes a seat look
+compliant. And the gateway reports it in no field at all, its figure moving
+*down* from low to high, which is noise.
+
+**The metric is now `total_tokens − prompt_tokens` where `total_tokens` exists,
+falling back to `output_tokens` / `completion_tokens` where it does not.** The
+fallback is required rather than defensive: the Anthropic Messages API has no
+`total_tokens` field.
+
+This changes no existing number. Where reasoning already sits inside
+`completion_tokens` those providers report `total = prompt + completion`
+exactly, so the two derivations agree — `npm run bound` reproduces
+`runs/t3-gate60` at 1.74x and `runs/t3-test60` at 1.41x unchanged.
+
+It does not rescue the `opencode` route, correctly. Tokens reported in no field
+cannot be recovered by arithmetic, and `bound.ts` continues to refuse to
+certify a seat served by it.
+
+**The lesson is the one this ADR keeps relearning.** Twice now a fairness rule
+has been expressed in terms of something a provider controls the reporting of,
+and twice the failure was invisible in the logs — the first caught on an
+invoice, this one caught only because two new routes were being probed against
+the old assumption. A number that is accepted and quietly wrong looks exactly
+like a number that is right. The defence is to derive the quantity from
+something that has to balance, not to read the field whose name matches.

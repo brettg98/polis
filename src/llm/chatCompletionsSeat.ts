@@ -34,6 +34,41 @@ export interface ChatCompletionsUsageTotals {
   cachedTokens: number;
 }
 
+// How many tokens a call actually produced, including any hidden reasoning.
+//
+// `completion_tokens` is NOT reliable for this and the difference is not
+// cosmetic — ADR-006's bound is defined on the figure this returns. Measured
+// across every route POLIS speaks to (#33), Z.ai, OpenAI and Moonshot put
+// reasoning inside `completion_tokens`, while Google's OpenAI-compat endpoint
+// leaves it out: gemini-3.5-flash at `high` reports 442 completion tokens
+// against a true 2,627, and the gap grows with effort. A seat reported that way
+// looks MORE compliant the harder it thinks, which is the one direction a
+// fairness check must never be wrong in.
+//
+// `total_tokens - prompt_tokens` is convention-independent. Where reasoning is
+// already inside `completion_tokens` the two are identical, because those
+// providers report total = prompt + completion exactly. Where it is not, this
+// recovers it. The fallback is required rather than defensive: the Anthropic
+// Messages API has no `total_tokens` field at all (its `output_tokens` already
+// includes thinking, and declares it in `output_tokens_details`).
+//
+// It does not rescue a provider that reports the tokens nowhere — the opencode
+// gateway charges for reasoning and reflects it in no field, which is why
+// `scripts/bound.ts` refuses that route outright rather than trusting a number.
+export function outputTokensFrom(usage?: {
+  prompt_tokens?: number;
+  completion_tokens?: number;
+  total_tokens?: number;
+  output_tokens?: number;
+}): number {
+  if (!usage) return 0;
+  if (typeof usage.total_tokens === 'number' && typeof usage.prompt_tokens === 'number') {
+    const derived = usage.total_tokens - usage.prompt_tokens;
+    if (derived >= 0) return derived;
+  }
+  return usage.output_tokens ?? usage.completion_tokens ?? 0;
+}
+
 // Defined by a protocol rather than a vendor: anything that speaks
 // /chat/completions. Three providers use it today and more can without touching
 // this file, which is why it is not named after any of them — `AnthropicSeat`
@@ -178,6 +213,7 @@ export class ChatCompletionsSeat implements Seat {
       usage?: {
         prompt_tokens?: number;
         completion_tokens?: number;
+        total_tokens?: number;
         prompt_tokens_details?: { cached_tokens?: number };
       };
     };
@@ -186,7 +222,7 @@ export class ChatCompletionsSeat implements Seat {
     this.stats.latencies.push(ms);
     this.usage.calls++;
     this.usage.inputTokens += data.usage?.prompt_tokens ?? 0;
-    this.usage.outputTokens += data.usage?.completion_tokens ?? 0;
+    this.usage.outputTokens += outputTokensFrom(data.usage);
     this.usage.cachedTokens += data.usage?.prompt_tokens_details?.cached_tokens ?? 0;
 
     const choice = data.choices?.[0];
