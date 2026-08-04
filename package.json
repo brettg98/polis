@@ -22,6 +22,7 @@
     "chronicle": "tsx scripts/chronicle.ts",
     "mapimage": "tsx scripts/mapimage.ts",
     "highlights": "tsx scripts/highlights.ts",
+    "publish": "tsx scripts/publish.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

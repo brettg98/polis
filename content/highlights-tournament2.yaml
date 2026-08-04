@@ -48,6 +48,19 @@ caveats:
     makes the population column comparable at all, and even then a repeat run
     under identical conditions reversed the order of two cities and killed one
     that had survived. One tournament is one sample.
+  - >-
+    One further number needs care, because it is easy to read as a hostility
+    ranking. A defection here counts a deliberate broken promise: a city that
+    shipped nothing while its warehouse still held three times what it owed. It
+    measures how often a city broke a promise it could have kept. It does not
+    measure the damage that followed. In this tournament 43 supply commitments
+    out of 442 delivered less than half of what was promised, and those 43
+    carried 65 percent of every unit that failed to arrive. Most of the harm
+    sits in a small number of collapsed supply lines rather than being spread
+    across the count. A city that promises more than it can produce starves its
+    partner just as effectively as one that withholds on purpose, and the engine
+    records that as misfortune rather than choice, because the city really was
+    empty when the delivery came due.
 runDir: runs/t2-full
 stories:
   - id: cursed-chair
