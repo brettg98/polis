@@ -74,3 +74,48 @@ strategically cosmetic. Decided in a grill-me session, 2026-07-25.
 
 Rails prove mistuned in real runs; a scenario wants per-world transport
 constants; or the espionage feature set arrives.
+
+## Amendment, 2026-08-04: what the sanity gate actually establishes (#30)
+
+Decision 5 says every schedule must be survivable by honest cooperators, and
+until now the gate checked that with **one** seat-RNG draw — `genmap` at
+authoring time, `verify:scenarios` on demand, both printing `PASS survivable by
+honest cooperators`. That output was much broader than the check behind it.
+
+Measured across 200 draws, varying only the seat RNG and leaving the world and
+the shock schedule untouched:
+
+| scenario | survives | cities lost |
+|---|---|---|
+| `kilnspire-ledger-424242-v2` | 87/200 (43.5%) | Brinemark 61 (mean t78), Emberfall 53 (mean t73) |
+| `kilnspire-ledger-424242` | 193/200 (96.5%) | Emberfall 7 (mean t43) |
+
+Draw 0, the one the gate tested, survives in both. So `-v2` — the world both
+published tournaments ran on — was certified as survivable while honest scripted
+play loses a city in most draws. The deaths are not spread evenly: only the two
+importing cities ever collapse, and they cluster around the Long Frost at t78.
+
+**What changed.** `verify:scenarios` now runs 200 draws by default (`--draws N`)
+and reports the survival rate and which cities were lost. **The pass/fail
+contract is deliberately unchanged**: draw 0 is still the certified draw, so no
+existing certification is revoked and the deterministic output that makes this
+script a branch-diff tool still works. What is fixed is the output claiming more
+than it checked.
+
+**What was rejected.** Failing below a survival threshold, which is the change
+that would give the gate real teeth. It needs a number, and picking one now
+would be guessing — the same objection ADR-004 decision 4 raised about
+legislating fragility. Re-tuning `-v2` was also rejected: both tournaments have
+already run on it, and changing the world now costs comparability and buys
+nothing.
+
+**Consequence for the writeup.** A result of the form "this model's city
+collapsed in Brinemark" is partly a statement about a world that loses Brinemark
+in 30% of honest draws. Cross-model comparison is unaffected — all seats faced
+the same world and rotation controls the seat effect — but the survival rate
+belongs next to the seat-effect caveat rather than being left unstated.
+
+One qualification: this measures the honest `ScriptedSeat` policy, not model
+play. Models have done better — zero deaths in both 60-tick runs. The gate is a
+floor test, and a floor test that passes on one lucky draw is what is being
+fixed here, not a claim about how models fare.

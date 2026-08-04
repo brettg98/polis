@@ -68,7 +68,11 @@ Scenarios may schedule **shocks**: named production multipliers (city/world ×
 resource/all × tick window), forecast or surprise, all public in
 `world.shocks` — plus optional **private forewarnings** to the target city
 (`you.forewarnings`), which is the deception instrument. Rails and the
-survivable-by-cooperators sanity gate live in `scenario.ts` / genmap.
+survivable-by-cooperators sanity gate live in `scenario.ts` / genmap. That gate
+certifies on a single seat-RNG draw; `npm run verify:scenarios` now re-runs it
+over 200 draws and reports the survival rate beside the certified draw, because
+the one-draw result was being printed as a general claim (ADR-003 amendment
+2026-08-04, #30).
 **Distance**: deliveries lose `0.25%/cell` in transit (floor 60% efficiency,
 constants in `config.trade`); quantities and fulfillment are origin-measured,
 so transit loss is never defection; per-counterparty efficiency is in every
