@@ -395,3 +395,78 @@ What is now in question is narrower and is a tuning matter rather than a design
 one, so it goes to an issue rather than being decided here: a purchase that
 cannot change any outcome is not a risk decision, and reading these runs as
 evidence about risk appetite assumes it was.
+
+## Amendment, 2026-08-03: the growth gate is measured in ticks of cover (#29)
+
+The addendum above says option 2 of #10 — making the gate proportional to
+consumption — is the wrong direction on the evidence. That is now half right and
+is corrected here rather than edited away, because the reasoning behind it still
+holds for the case it was actually about.
+
+**What was conflated.** How the gate is *expressed* and how *strict* it is are
+independent, and #10 treated them as one decision. Re-expressing the gate at
+unchanged strictness does make growth rarer, which is what #10 rejected and it
+was right to. Re-expressing it while lowering the threshold is a different
+change, and it is what #29 implements.
+
+**The defect being fixed.** The threshold was `stockpileCap × 0.25` where
+`stockpileCap` is anchored to `startPopulation` and therefore never moves, while
+consumption tracks live population and does. So a flat 50 bought 5 ticks of
+cover at population 100 and 2.9 at 175. The rule loosened as a city grew, which
+runs against decision 3 above, where a growing city is meant to get *more*
+fragile. It also could not be stated to a seat in one sentence, which is part of
+why `prompt.ts` describes it only as "all three stockpiles are healthy".
+
+**The rule now.** Growth requires more than `growthGateTicks` ticks of current
+consumption in every resource. It means one thing at every size, and the sentence
+is writable: *you grow while you are holding N turns of food, energy, and
+materials.*
+
+**N = 2.5, chosen by sweep.** Honest scripted seats, both committed scenarios,
+200 seat-RNG samples per level, run against the old rule as a control. Scripted
+seats never build, so the ceiling stays at 150 and the gate is the only thing
+that can stop growth.
+
+`kilnspire-ledger-424242-v2`, 98 ticks:
+
+| gate | growth ticks/run | runs with a death | cities at cap | mean final pop |
+|---|---|---|---|---|
+| flat 50 (old) | 158.0 | 135/200 | 1.59 | 102.1 |
+| N = 2 | 203.6 | 114/200 | 2.13 | 109.7 |
+| **N = 2.5** | **198.2** | **113/200** | **2.15** | **110.0** |
+| N = 3 | 186.8 | 131/200 | 2.02 | 107.0 |
+| N = 3.5 | 179.6 | 126/200 | 1.80 | 106.8 |
+
+`kilnspire-ledger-424242`, 60 ticks:
+
+| gate | growth ticks/run | runs with a death | cities at cap | mean final pop |
+|---|---|---|---|---|
+| flat 50 (old) | 127.1 | 8/200 | 1.09 | 122.5 |
+| N = 2 | 162.9 | 8/200 | 2.51 | 131.8 |
+| **N = 2.5** | **157.7** | **7/200** | **2.44** | **130.5** |
+| N = 3 | 150.5 | 6/200 | 1.93 | 127.8 |
+| N = 3.5 | 143.2 | 8/200 | 1.33 | 125.9 |
+
+2.5 beats the old rule on every measure in both scenarios, and it lowers the
+death rate rather than buying growth with collapses. It is not so loose that
+growth is free: 2.15 of 4 cities reach the cap in v2, not 4 of 4. Values below 2
+were dropped for being close to unconditional, and 5 — which is what the old
+rule means at population 100 — is worse than the old rule on growth in the
+60-tick scenario, which is the arithmetic #10 predicted.
+
+**A single sample would have chosen differently.** On one seat-RNG draw, N = 1,
+2 and 4 each killed a city in v2 while 2.5, 3, 3.5 and 5 did not, which reads as
+a threshold and is not one. Across 200 draws every level kills a city in most
+runs. That is the project's own recurring lesson, and it produced #30.
+
+**Related, and not caused by this change:** measuring the control exposed that
+the ADR-003 sanity gate certifies from one seat-RNG draw. Under the *old* rule
+`kilnspire-ledger-424242-v2` kills a city in 135 of 200 draws, and the single
+draw the gate tests is one of the survivors. Filed as #30.
+
+**What this does not do.** It does not resolve #28. More cities now reach 150,
+which makes a purchased ceiling matter for the first time, but nothing here puts
+a raised ceiling within reach of a 100-tick run on its own.
+
+**Comparability.** Tournament 3 is not comparable to tournaments 1 or 2 on
+population. This is the second deliberate break, after decision 8.

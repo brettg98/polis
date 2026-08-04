@@ -283,7 +283,12 @@ export class Simulation {
         c.population *= 1 - cc.starvationDecline * worstMissing;
       } else {
         c.unrest = Math.max(0, c.unrest - cc.unrestFall);
-        if (RESOURCES.every((r) => c.stockpiles[r] > cap * 0.25)) {
+        // Measured against CURRENT consumption, not startPopulation (#29). The
+        // old flat threshold was stockpileCap * 0.25, which never moved while
+        // consumption did, so the same rule asked a city of 175 for 2.9 ticks
+        // of cover and a city of 100 for 5.
+        const growthFloor = cc.growthGateTicks * c.population * cc.consumptionPerCapita;
+        if (RESOURCES.every((r) => c.stockpiles[r] > growthFloor)) {
           c.population = Math.min(c.population * (1 + cc.growthRate), this.ceilingOf(c));
         }
       }

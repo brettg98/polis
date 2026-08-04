@@ -12,6 +12,11 @@ export interface SimConfig {
     stockpileCapTicks: number;
     starvationDecline: number; // max population loss fraction per tick when fully starved
     growthRate: number;
+    // Growth requires this many ticks of cover in every resource, measured
+    // against CURRENT consumption. Anchoring it to live population rather than
+    // to startPopulation is what keeps the rule meaning the same thing at every
+    // size (#29) — a flat threshold silently loosens as a city grows.
+    growthGateTicks: number;
     maxGrowthFactor: number;
     collapseFraction: number; // dead below this fraction of starting population
     unrestRise: number;
@@ -50,6 +55,11 @@ export function defaultConfig(seed = 20260725): SimConfig {
       stockpileCapTicks: 20,
       starvationDecline: 0.13,
       growthRate: 0.01,
+      // 2.5 chosen by sweep, not by argument (#29): across 200 seat-RNG samples
+      // on both committed scenarios it beats the old flat threshold on growth
+      // ticks, cities reaching the cap, and mean population, while lowering the
+      // death rate rather than trading growth for collapses.
+      growthGateTicks: 2.5,
       maxGrowthFactor: 1.5,
       collapseFraction: 0.35,
       unrestRise: 0.12,

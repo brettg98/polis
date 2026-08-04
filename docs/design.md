@@ -41,6 +41,12 @@
   resource ≈ 2.2× one city's consumption, so a world where a resource has only
   two producers is viable but tight. Lower toward 0.20 for a knife-edge
   economy where defection turns lethal.
+- **Growth gate**: `growthGateTicks` (2.5). Population grows only while every
+  resource holds more than this many ticks of *current* consumption. Measured
+  against live population, not `startPopulation`, so the rule means the same
+  thing at every size — a flat threshold silently loosens as a city grows
+  (ADR-004 amendment 2026-08-03, #29). Raise it for a world where growth has to
+  be earned; below about 2 growth becomes close to unconditional.
 - Verified behavior at defaults (seed 20260725): autarky collapses all cities
   at tick 16; honest trade sustains indefinitely; one opportunist is contained
   by tit-for-tat.
