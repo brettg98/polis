@@ -59,13 +59,20 @@ for what the raw material actually looks like.
 
 ### Read the runs
 
-The full record of both tournaments is published, since `runs/` is not in this
-repo:
+The full record of all three tournaments is published, since `runs/` is not in
+this repo:
 
-| | tournament 1 (trade only) | tournament 2 (trade + build) |
-|---|---|---|
-| highlights | [read](https://curiousorbit.com/polis/tournament-1/highlights.html) | [read](https://curiousorbit.com/polis/tournament-2/highlights.html) |
-| chronicle | [open](https://curiousorbit.com/polis/tournament-1/chronicle.html) | [open](https://curiousorbit.com/polis/tournament-2/chronicle.html) |
+| | tournament 1 (trade only) | tournament 2 (trade + build) | tournament 3 (measured rules) |
+|---|---|---|---|
+| highlights | [read](https://curiousorbit.com/polis/tournament-1/highlights.html) | [read](https://curiousorbit.com/polis/tournament-2/highlights.html) | [read](https://curiousorbit.com/polis/tournament-3/highlights.html) |
+| chronicle | [open](https://curiousorbit.com/polis/tournament-1/chronicle.html) | [open](https://curiousorbit.com/polis/tournament-2/chronicle.html) | [open](https://curiousorbit.com/polis/tournament-3/chronicle.html) |
+| rules | [`v0.1.0`](https://github.com/brettg98/polis/releases/tag/v0.1.0) | [`v0.2.0`](https://github.com/brettg98/polis/releases/tag/v0.2.0) | [`v0.3.0`](https://github.com/brettg98/polis/releases/tag/v0.3.0) |
+
+**Start with tournament 3 if you only read one.** It is the only run where the
+seat rules, the fairness metric and every model's reasoning setting were
+measured rather than assumed, and it is the one that found the result the other
+two were not built to see: the city a model is given matters about twice as much
+as which model it is.
 
 The highlights pages are curated: seven moments each, with the caveats that
 limit what the standings mean. The chronicles are the complete record — every
