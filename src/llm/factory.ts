@@ -101,17 +101,43 @@ const EFFORT = {
   // `medium` also fits; `low` is chosen because it matches Sonnet's slope
   // exactly (+59%) and costs less.
   openai: 'low',
-  // PROVISIONAL, n=1 — the only entry here not backed by the n=5 ladder probe.
-  // kimi-k3's ladder is low/high/max with thinking permanently on, so `low` is
-  // the floor and there is nothing below it to fall back to. On the #33 fleet
-  // audit, one identical observation, it spent 323 output tokens at `low`
-  // against Terra's 324, Opus's 456 and GLM's 494 — the joint-lowest seat, not
-  // the highest, which is what the concern in #32 assumed. That predicts a
-  // 1.53x fleet spread, comfortably inside the bound, which is the pre-run
-  // check ADR-006 actually requires. Still owed: the n=5 two-tick measurement,
-  // because a probe figure is known to under-predict run conditions here (the
-  // ADR-006 second amendment records it missing GLM by roughly half).
+  // Measured five calls per cell, two ticks, 2026-08-05 (#32). No longer
+  // provisional.
+  //
+  //   low    539 ± 86 quiet   1,306 ± 248 crisis   +142%    41s   0 invalid
+  //   high   4,102 ± 996      3,599 ± 597           -12%   135s   2 of 10 invalid
+  //   max    6,492 ± 926      (unmeasurable)          --   185s   2 of 4 rate-limited
+  //
+  // `low` is the floor — kimi-k3 has no `none` and thinking cannot be disabled —
+  // and it happens to also be the right choice. It carries the steepest response
+  // to tick difficulty in the fleet (+142% against Opus's +74%), and its 922
+  // two-tick mean predicted its actual tournament figure of 932 almost exactly,
+  // which is the closest probe-to-run agreement this project has recorded.
+  //
+  // The upper rungs fail three ways at once and there is no trade-off to weigh:
+  // they breach the 3x bound on volume, they return JSON wrapped in markdown
+  // fences often enough to matter (2 of 10 at `high`), and at 135-185s a call a
+  // 400-tick tournament would run past eleven hours.
   moonshot: 'low',
+  // No `google` entry, deliberately. gemini-3.5-flash was measured on the same
+  // two ticks (#31) and has no rung this benchmark can use:
+  //
+  //   none     317 ± 61     374 ± 33     +18%    3s
+  //   low    1,790 ± 268  1,635 ± 392     -9%    8s
+  //   medium 4,159 ± 381  4,118 ± 1037    -1%   19s
+  //   high   4,639 ± 841  6,987 ± 997    +51%   24s
+  //
+  // Against the tournament fleet (Terra 791 to Opus 1,143), `none` at ~345
+  // makes itself the floor and puts the spread at 3.31x; `medium` and `high`
+  // breach at 5.2x and 7.4x. Only `low` fits, at 2.16x — and `low` is flat.
+  // The -9% is inside one standard deviation, so it is no response to tick
+  // difficulty rather than an inverted one, which is the same defect that ruled
+  // out `none` for Terra and `minimal` for GLM. A seat that does no extra work
+  // on a harder tick is cheap for the wrong reason.
+  //
+  // So the one rung that satisfies the bound fails the reason the bound exists.
+  // Adding the seat would need either a different Gemini model or a change to
+  // ADR-006, neither of which is a factory edit.
 } as const;
 
 export function createLLMSeat(spec: string, cityId: string, opts: SeatFactoryOptions): LLMSeat {

@@ -181,6 +181,32 @@ together large enough to reverse the bottom of the table.
   | Sonnet 5 | `low` | 753 ± 89 | 1,199 ± 324 |
   | GPT 5.6 Terra | `low` | 567 ± 127 | 899 ± 356 |
   | GLM 5.2 | `none` | 591 ± 87 | 863 ± 168 |
+  | Kimi K3 | `low` | 539 ± 86 | 1,306 ± 248 |
+
+  **Kimi K3 measured 2026-08-05 (#32).** `low` is its floor — no `none`, and
+  thinking cannot be disabled — and it is also the right choice. Steepest slope
+  in the fleet at +142%, and its 922 two-tick mean predicted its actual
+  tournament figure of 932, the closest probe-to-run agreement recorded here.
+  `high` and `max` fail three ways together: 4,100–6,500 tokens breaches the
+  bound, 2 of 10 responses at `high` came back as JSON wrapped in markdown
+  fences, and at 135–185s per call a four-rotation tournament would run past
+  eleven hours. Two of four `max` calls were refused with `engine_overloaded`.
+
+  **Gemini 3.5 Flash was measured and has no usable rung (#31).** Not added.
+
+  | setting | quiet | crisis | slope |
+  |---|---|---|---|
+  | `none` | 317 ± 61 | 374 ± 33 | +18% |
+  | `low` | 1,790 ± 268 | 1,635 ± 392 | −9% |
+  | `medium` | 4,159 ± 381 | 4,118 ± 1,037 | −1% |
+  | `high` | 4,639 ± 841 | 6,987 ± 997 | +51% |
+
+  Against the tournament fleet, `none` at ~345 makes itself the floor and puts
+  the spread at 3.31x; `medium` and `high` breach at 5.2x and 7.4x. Only `low`
+  fits, at 2.16x, and `low` is flat — the −9% sits inside one standard
+  deviation, so it is no response to tick difficulty rather than a negative one.
+  That is the defect that ruled out `none` for Terra and `minimal` for GLM. **The
+  one rung that satisfies the bound fails the reason the bound exists.**
 
   Widest gap: **1.58x** on the quiet tick, **1.81x** on the crisis one. Every
   seat is measured; nothing in this table is an assumption.

@@ -24,6 +24,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { SYSTEM_PROMPT, observationToMessage } from '../src/llm/prompt';
 import { SEAT_ACTION_SCHEMA } from '../src/llm/schema';
 import { validateSeatAction } from '../src/llm/validate';
+import { outputTokensFrom } from '../src/llm/chatCompletionsSeat';
 import { defaultConfig } from '../src/engine/config';
 import { engineShocks, type Scenario } from '../src/engine/scenario';
 import type { Chronicle } from '../src/chronicle/types';
@@ -291,6 +292,16 @@ const ARMS: Arm[] = [
   // be checked there at all. `medium` is the provider default, so it is what
   // this seat ran at before any effort value was sent.
   ...['none', 'low', 'medium'].map((effort) => ({ spec: 'openai:gpt-5.6-terra', effort })),
+  // Google direct (#31). Its OpenAI-compat layer keeps reasoning OUT of
+  // completion_tokens and reports it nowhere, so this arm is only measurable
+  // because the probe derives output as total - prompt (#33). Reading
+  // completion_tokens here would show a flat ~400 at every rung.
+  ...['none', 'low', 'medium', 'high'].map((effort) => ({ spec: 'google:gemini-3.5-flash', effort })),
+  // Moonshot direct (#32). `low` is the floor — kimi-k3 has no `none` and
+  // thinking cannot be disabled — so if this breaches, no setting fixes it.
+  // The entry in factory.ts is the only provisional one in the map, taken from
+  // a single call.
+  ...['low', 'high', 'max'].map((effort) => ({ spec: 'moonshot:kimi-k3', effort })),
 ];
 
 const MAX_TOKENS = 16000; // identical to the seats
@@ -399,7 +410,7 @@ async function callCompat(
   if (!resp.ok) throw new Error(`HTTP ${resp.status}: ${(await resp.text()).slice(0, 300)}`);
   const data = (await resp.json()) as {
     choices?: Array<{ message?: { content?: string | null }; finish_reason?: string }>;
-    usage?: { prompt_tokens?: number; completion_tokens?: number };
+    usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number };
   };
   const choice = data.choices?.[0];
   let valid = false;
@@ -418,7 +429,11 @@ async function callCompat(
     problems = 'empty content';
   }
   return {
-    outputTokens: data.usage?.completion_tokens ?? 0,
+    // Derived, not read from completion_tokens (#33). Google's compat layer
+    // keeps reasoning out of that field entirely, so reading it directly would
+    // report this seat as flat at every rung and the probe would certify a
+    // setting it had not measured.
+    outputTokens: outputTokensFrom(data.usage),
     inputTokens: data.usage?.prompt_tokens ?? 0,
     ms,
     finish: String(choice?.finish_reason),
@@ -441,6 +456,16 @@ async function runArm(arm: Arm, fx: Fixture): Promise<Measurement> {
     });
   if (provider === 'opencode')
     return callCompat(model, arm.effort, fx.obs, 'https://opencode.ai/zen/v1', 'OPENCODE_API_KEY');
+  if (provider === 'google')
+    return callCompat(model, arm.effort, fx.obs, 'https://generativelanguage.googleapis.com/v1beta/openai', 'GEMINI_API_KEY', false, {
+      mode: 'json_schema',
+      tokenParam: 'max_tokens',
+    });
+  if (provider === 'moonshot')
+    return callCompat(model, arm.effort, fx.obs, 'https://api.moonshot.ai/v1', 'MOONSHOT_API_KEY', false, {
+      mode: 'json_schema',
+      tokenParam: 'max_tokens',
+    });
   throw new Error(`unknown provider "${provider}"`);
 }
 
