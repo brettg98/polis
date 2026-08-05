@@ -569,3 +569,89 @@ Nothing here reopens the engine. #28's decision to leave the mechanic alone is
 unchanged, and the risk-appetite claim stays withdrawn: a purchase whose payoff
 depends on which chair you occupy measures the chair at least as much as the
 occupant, which is this project's oldest result.
+
+## Fifth amendment, 2026-08-05: the first full tournament under the corrected rules
+
+`runs/full-4rot-20260804`. Four rotations, 100 ticks, every model in every seat,
+$33.68, 1,252 calls, one seat failure. ADR-006 bound measured at **1.45x**. This
+is the first tournament where the seat rules, the fairness metric and the effort
+settings were all measured rather than assumed, so it is the first whose
+model column means anything.
+
+### The seat is worth twice the model
+
+Final population, model by seat:
+
+| model | Kilnspire | Greyharrow | Brinemark | Emberfall | model mean | own spread |
+|---|---|---|---|---|---|---|
+| claude-opus-5 | 227 | 231 | 108 | 128 | **173** | 123 |
+| gpt-5.6-terra | 219 | 208 | 95 | 60 | **145** | 159 |
+| kimi-k3 | 176 | 201 | 66 | 66 | **127** | 135 |
+| glm-5.2 | 184 | 175 | 43 | DEAD | **108** | 152 |
+| **seat mean** | **201** | **204** | **78** | **71** | | |
+
+**Range of the four seat means: 132. Range of the four model means: 65.**
+
+And the sharper version: **every model's own spread across the four chairs
+(123–159) is larger than the entire distance between the best and worst model
+(65).** Terra scored 219 and 60 in the same tournament under the same prompt.
+
+Producer seats took the top two places in all four rotations without exception.
+Both deaths in this project's history that occurred under rotation were importer
+seats; across every run ever recorded, all six were.
+
+Rotation is not a nicety here. Without it the population column is close to
+meaningless, and tournaments 1 and 2 published four-rotation averages for
+exactly this reason.
+
+### #34 did not change build behaviour, and this is where that is recorded
+
+The fourth amendment credited the #34 disclosure with making the ceiling
+reachable. The full tournament does not support the behavioural half of that.
+
+| | before #34 (28 seat-runs) | this tournament (16) |
+|---|---|---|
+| mean population at first build | 103 | **103** |
+| mean unused headroom under the ceiling already owned | 47 | **47** |
+| first builds within 20 of that ceiling | 0 | **0** |
+
+Identical. Seats still buy at a population of about 103 with about 47 points of
+room they have not used. Median first-build tick moved later (roughly 9 to 12,
+with a mean of 16.6 pulled up by two purchases made by cities already
+collapsing), but they are buying at the same size for the same reason.
+
+What #34 changed is visible only in the journals: seats now cite `growthFloor`
+by name, decline deliveries to stay above it, and project tick-by-tick when they
+will clear it. The reasoning improved. The decision did not.
+
+**The population records are not attributable to #34 either.** The 227 and 231
+here came in a 100-tick tournament; the pre-#34 runs at 60 ticks peaked at 146,
+and the post-#34 run at 60 ticks peaked at 158. Forty extra ticks of compounding
+growth is the larger part of that gap and cannot be separated from the prompt
+change with the runs that exist. The honest attribution for cities exceeding 150
+at all is the #29 gate change, which is what made growth achievable.
+
+### One purchase, out of sixteen, made for the designed reason
+
+GLM in Greyharrow, rotation 3. It began spending at t36 at population 112 — so
+not a late decision, and an earlier note in this session that called it a
+seventy-tick abstention was wrong about the start. What is unusual is the
+completion: it dribbled small amounts for thirty-five ticks and **completed the
+step at t71 at population 149, one point below its ceiling**, then grew into it
+to finish at 175 of 175.
+
+That is the only case in this project where a ceiling was completed by a city
+that was actually running out of room, and the only case where a purchased
+ceiling was then filled.
+
+### Also recorded
+
+Defections fell sharply across the tournament — 151, 236, 131, 62 by rotation —
+with the same four models and the same world. Hostility tracks seating and
+scarcity, not the lineup.
+
+One seat failure in 1,252 calls (Opus, rotation 3 tick 18, an offer with a
+non-positive quantity that failed validation twice). It passed the tick, which
+mechanically produces shorts that are indistinguishable from chosen defections
+in the raw count. The Chronicle separates them; a published defection figure
+should say so.
