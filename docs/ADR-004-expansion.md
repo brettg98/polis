@@ -570,13 +570,21 @@ unchanged, and the risk-appetite claim stays withdrawn: a purchase whose payoff
 depends on which chair you occupy measures the chair at least as much as the
 occupant, which is this project's oldest result.
 
-## Fifth amendment, 2026-08-05: the first full tournament under the corrected rules
+## Fifth amendment, 2026-08-05: tournament 3
 
 `runs/full-4rot-20260804`. Four rotations, 100 ticks, every model in every seat,
 $33.68, 1,252 calls, one seat failure. ADR-006 bound measured at **1.45x**. This
 is the first tournament where the seat rules, the fairness metric and the effort
 settings were all measured rather than assumed, so it is the first whose
 model column means anything.
+
+**This run is tournament 3** (Brett, 2026-08-05). The question of what T3 would
+be had been open since 2026-08-02, with weapons and a clean fairness re-run as
+the candidates. It turned out to be the second of those, run before it was
+named. The rules it played are the ones tagged `v0.3.0`: the growth gate in
+ticks of cover (#29), output tokens derived rather than read from one field
+(#33), and the gate stated to seats with a `growthFloor` observation field
+(#34). Kimi K3 replaced Sonnet 5 in the lineup.
 
 ### The seat is worth twice the model
 

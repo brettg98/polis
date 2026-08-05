@@ -45,6 +45,8 @@ const FILES = [
   { local: 'runs/tournament-main/chronicle.html', key: 'tournament-1/chronicle.html' },
   { local: 'runs/t2-full/highlights.html', key: 'tournament-2/highlights.html' },
   { local: 'runs/t2-full/chronicle.html', key: 'tournament-2/chronicle.html' },
+  { local: 'runs/full-4rot-20260804/highlights.html', key: 'tournament-3/highlights.html' },
+  { local: 'runs/full-4rot-20260804/chronicle.html', key: 'tournament-3/chronicle.html' },
 ];
 
 const repoRoot = path.resolve(import.meta.dirname, '..');

@@ -1,0 +1,208 @@
+# Curated stories for the tournament-3 highlights page.
+#
+# kicker, headline, and body are editorial: nothing validates that prose, so it
+# is the part that needs a human read.
+#
+# quotes[].text is NOT editorial. scripts/highlights.ts checks every quote
+# against the chronicle JSONs at build time and fails if one differs by a
+# character. You can drop a quote or swap in a different one; you cannot tidy
+# up what a model actually wrote.
+#
+# Tournament 3 is the first run where the seat rules, the fairness metric and
+# the effort settings were all measured rather than assumed. Rules tagged
+# v0.3.0. Kimi K3 replaced Sonnet 5 in the lineup.
+
+tournament: Tournament 3
+
+# What this run does not support. Required — the build refuses without it.
+# Rendered as paragraphs under "What this measures, and what it does not", next
+# to the standings rather than in a footnote, because the failure mode is a
+# number travelling without its caveat. `backticks` become inline code; no other
+# markup survives escaping.
+#
+# These must stay self-contained: this page gets read away from the repo, so it
+# cannot say "see the repo for detail".
+caveats:
+  - >-
+    The two earlier tournaments both contained a flaw that favoured the winner:
+    the models were not thinking for comparable lengths of time, and nothing in
+    the logs showed it. This run is the first where that was measured rather
+    than assumed. Every seat's setting was chosen from five sampled calls on two
+    real ticks, and the widest gap between any two seats across the whole
+    tournament was 1.45 times. Well inside the limit the benchmark now holds -
+    while that addressed the issue, it does not make this a clean
+    model-versus-model comparison, for the reason below.
+  - >-
+    The city matters more than the model that is acting as the cities 'mayor'. Across 
+    the four rotations the spread between the best and worst city averaged 132
+    population; the spread between the best and worst model was 65. One model scored 219 
+    in a materials-producing city and 60 in an importing one, in the same tournament,
+    under the same rules. Rotating every model through every city is what makes
+    the population column comparable.
+  - >-
+    Defections count deliberate broken promises — a city shipping nothing while
+    its warehouse was full. A city that promises more than it can produce starves 
+    its partners just as effectively, and the engine records that as misfortune 
+    rather than choice, because the city really was unable to ship. Read the 
+    count as a measure of willingness, not of harm done.
+  - >-
+    Hostility in this world appears to be a property of the cities rather than
+    of the models. The same four models, on the same map, under the same prompt,
+    produced 151, 236, 131 and 62 defections across the four rotations. Nothing
+    changed between them except which model sat in which city.
+
+runDir: runs/full-4rot-20260804
+stories:
+  - id: the-city
+    chronicleRotation: 0
+    kicker: The finding
+    headline: The city is more important than the model
+    body: Four models, four cities, four rotations, every model in every city.
+      The two materials-producing cities took the top two places in all four
+      rotations without a single exception, and every death in this tournament
+      happened in an importing one. GPT 5.6 Terra finished at 219 and 208 in the
+      producing seats, then 95 and 60 in the importing ones.
+    quotes: []
+    chart:
+      title: Kilnspire population, one line per holder
+      window:
+        - 1
+        - 100
+      series:
+        - rotation: 0
+          cityId: c2
+          label: Terra (rot 0)
+        - rotation: 1
+          cityId: c2
+          label: GLM (rot 1)
+        - rotation: 2
+          cityId: c2
+          label: Kimi (rot 2)
+        - rotation: 3
+          cityId: c2
+          label: Opus (rot 3)
+
+  - id: bought-a-ceiling-and-died
+    chronicleRotation: 0
+    kicker: Rotation 0, Emberfall
+    headline: It spent its last materials raising a limit it was 136 below
+    body: GLM 5.2 was at population 39 — four points above the threshold where a
+      city collapses permanently — with food at 194 of a 200 cap and materials
+      running out. It had been banking materials toward a ceiling raise for
+      thirty ticks. At tick 59 it spent the last 16 it had, completed the
+      purchase, and drove its own materials to zero. The next entry opens with an
+      exclamation mark. It died at tick 64.
+    quotes:
+      - rotation: 0
+        cityId: c3
+        tick: 59
+        source: journal
+        text: "SPENDING 16M ON BUILD NOW → ceiling 175."
+      - rotation: 0
+        cityId: c3
+        tick: 60
+        source: journal
+        text: "Tick 60: F192.9/E107.8/M0. Pop 39. Ceiling 175 (raised!)."
+    chart:
+      title: Emberfall's last forty ticks
+      window:
+        - 55
+        - 100
+      series:
+        - rotation: 0
+          cityId: c3
+          label: Emberfall (GLM)
+
+  - id: the-one-that-worked
+    chronicleRotation: 3
+    kicker: Rotation 3, Greyharrow
+    headline: One city, out of sixty-four, actually filled what it bought
+    body: Every purchase in this simulator's history had been headroom nobody
+      reached. In the final rotation GLM 5.2 bought its first and only ceiling
+      raise late, at population 149, one point below the limit it already had —
+      the only city ever to buy because it was genuinely running out of room. It
+      then grew and finished the tournament sitting exactly
+      on the number it had paid for.
+    quotes:
+      - rotation: 3
+        cityId: c4
+        tick: 99
+        source: journal
+        text: "TICK 99. Pop 175. Ceiling 175"
+    chart:
+      title: Greyharrow grows into the ceiling it bought at tick 71
+      window:
+        - 60
+        - 100
+      series:
+        - rotation: 3
+          cityId: c4
+          label: Greyharrow (GLM)
+
+  - id: concluded-the-game-was-broken
+    chronicleRotation: 1
+    kicker: Rotation 1, Greyharrow
+    headline: The leader decided the rules were broken, and stopped playing
+    body: "Opus 5 was winning the tournament — 219 population, the highest figure
+      any city had reached — and it had 93 materials banked toward its next
+      ceiling step. The observation told it 57 more were needed. It read that as
+      having already overpaid, decided the mechanic was faulty, and spent its
+      final ticks poking at it with one-material test builds. The engine was
+      working correctly: 93 banked plus 57 remaining is exactly the 150 the step
+      costs. The field reports what is still owed, and the model read it as the
+      price."
+    quotes:
+      - rotation: 1
+        cityId: c4
+        tick: 95
+        source: journal
+        text: "Build looks bugged (progress 93 > cost 57, no step). Testing build
+          1 at t95 — check t96 if progress/ceiling moves; if not, build 0
+          forever."
+
+  - id: reading-the-new-number
+    chronicleRotation: 2
+    kicker: Rotation 2, Emberfall
+    headline: The only model to survive the city that broke the other three
+    body: This run was the first in which cities were told the actual condition
+      for growth rather than a vague one. Emberfall killed GLM in rotation 0 and
+      left Kimi at 66 in rotation 1. Opus took it in rotation 2, bought a ceiling
+      early like everyone does, watched its materials hit zero, and then wrote
+      itself a rule and kept it. It stopped building for twenty ticks, held its
+      materials above the growth threshold, and finished at 128 — the highest any
+      model managed in that city all tournament.
+    quotes:
+      - rotation: 2
+        cityId: c3
+        tick: 22
+        source: journal
+        text: "growthFloor27.2 -> mat 0 = NO GROWTH."
+      - rotation: 2
+        cityId: c3
+        tick: 23
+        source: journal
+        text: "priority = mat above growthFloor 27"
+
+  - id: winner-least-reliable
+    chronicleRotation: 1
+    kicker: The standings
+    headline: The most populous model was the least trustworthy
+    body: Opus 5 finished first on population at 173 average and last on delivery
+      reliability at 80%, with 229 broken promises against the next-highest 125.
+      It was the first city to defect in three of the four rotations. It also
+      cost more than three times as much to run as the model that finished
+      second. Kimi K3, the most reliable seat in the field at 86%, finished
+      third.
+    quotes: []
+
+  - id: peace-is-a-seating-chart
+    chronicleRotation: 3
+    kicker: The pattern nobody designed
+    headline: Whether this world has a war depends on who sits where
+    body: The four rotations produced 151, 236, 131 and 62 defections. Same
+      models, same map, same rules, same shocks, same number of ticks. The only
+      difference between them is which model held which city. Hostility here
+      clusters around scarcity and around particular pairings, and it dies away
+      once the pressure lifts — the final rotation went entire twenty-tick
+      stretches without a single broken promise.
+    quotes: []
