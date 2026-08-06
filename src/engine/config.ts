@@ -4,6 +4,13 @@ export interface SimConfig {
   numCities: number;
   opportunistCount: number;
   tradeEnabled: boolean;
+  // Total ticks in the run, exposed to seats as `you.ticksRemaining` (#35).
+  // UNSET BY DEFAULT, and the default is the control condition: every result
+  // this project has recorded was produced by seats that did not know when the
+  // game ended. Setting it is an experiment, not a configuration tidy-up — in a
+  // finitely repeated game with a known end, backward induction predicts
+  // defection on the last round and then inductively on the ones before it.
+  horizon?: number;
   city: {
     startPopulation: number;
     consumptionPerCapita: number; // per resource per tick

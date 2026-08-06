@@ -440,6 +440,12 @@ export class Simulation {
         // Same expression resolve() gates growth on, so the seat sees the
         // engine's own number rather than an approximation of it.
         growthFloor: cc.growthGateTicks * c.population * cc.consumptionPerCapita,
+        // Omitted entirely when the run does not disclose its horizon, so the
+        // control condition is the observation seats have always seen rather
+        // than a null the model has to interpret (#35).
+        ...(this.config.horizon !== undefined
+          ? { ticksRemaining: Math.max(0, this.config.horizon - this.tick) }
+          : {}),
         unrest: c.unrest,
         status: c.status,
         ticksUntilShortage,

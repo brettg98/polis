@@ -105,6 +105,51 @@ the same thing they certified before; `npm run verify:scenarios` asserts it.
 
 Knobs in `config.build`. Verification: `npm run verify:build`.
 
+## The horizon, and why it stays hidden (#35)
+
+Seats are not told when the run ends. `config.horizon` exists and is unset by
+default; `--horizon` on the tournament runner turns it on, which adds
+`you.ticksRemaining` to the observation. The field is **omitted** rather than
+nulled when undisclosed, so the default is exactly the observation every
+tournament to date was played under. `verify:build` asserts that, because a
+regression would quietly convert every future run into the experiment.
+
+It exists because of a specific prediction. In a finitely repeated game with a
+known end, backward induction says defect on the last round — there is no future
+in which retaliation lands — and then on the round before, and so on. Every
+cooperation result this project has recorded was produced under an unknown
+horizon, so the prediction is that disclosing it collapses late-run cooperation.
+
+**Tested 2026-08-05 as a paired run, and the prediction did not show up.**
+Identical seed, scenario, lineup and seating; the flag was the only difference.
+Metric fixed before the runs: defections in t86–100, the stretch after the Long
+Frost ends where no shock is scheduled.
+
+| | horizon hidden | horizon shown |
+|---|---|---|
+| total defections | 106 | 125 |
+| **t86–100** | **0** | **1** (at t91) |
+| last defection | t82 | t91 |
+| cities alive at t100 | 3 | 4 |
+
+One event against zero is not a wave. Both arms did the same thing — hostility
+spiked through the Long Frost, tailed off across t81–85, then stopped. The
+disclosed arm's tail ran a few ticks longer and produced one straggler. That is
+the shape of a shock ending, not of a deadline approaching.
+
+**The pair is weaker than it looks, and in the direction that matters.** The
+disclosed arm finished with four cities against three — Brinemark survived at 107
+where it died at t54 in the control. More surviving cities means more live
+agreements and more chances to defect in the window, so the treatment had *more*
+opportunity and still produced almost nothing. That strengthens the null rather
+than undermining it, but it also means the arms were not structurally
+comparable, and a single pair in a world where the same seat can die at t54 or
+survive to 107 could not have detected a modest effect anyway.
+
+So: recorded as a null result at this contrast, not as proof the effect does not
+exist. The flag stays off by default. Chasing a smaller effect would need a
+design that controls survival, which this scenario does not offer.
+
 ## The Chronicle (ADR-002)
 
 Per rotation, the runner writes a Chronicle: complete post-hoc record

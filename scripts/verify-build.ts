@@ -219,6 +219,37 @@ await runCase({
   await sim.step(capture);
   check('growth floor tracks population, not startPopulation', mine!.you.growthFloor, 2.5 * 100 * 0.1);
   check('neighbour cannot see the growth floor', 'growthFloor' in seenHuge, false);
+
+  // #35. The control condition is the DEFAULT, and it has to stay that way: the
+  // field must be absent rather than null, because every result this project has
+  // recorded was produced by seats with no announced end. A regression here
+  // would silently convert every future run into the experiment.
+  check('horizon hidden by default — field absent, not null', 'ticksRemaining' in mine!.you, false);
+}
+
+// Case 6 — the horizon experiment's treatment arm (#35).
+{
+  console.log('\nCase 6: the horizon is disclosed only when the run asks for it');
+  const { sim } = await arena(10);
+  sim.config.horizon = 40;
+  const [a] = sim.cities;
+  let mine: SeatObservation | undefined;
+  const capture = new Map<string, Seat>(
+    sim.cities.map((c) => [c.id, new TestSeat(c.id, (o) => { if (c.id === a.id) mine = o; return {}; })]),
+  );
+  await sim.step(capture);
+  // Asserted against the tick rather than a literal: arena() burns setup ticks
+  // before handing the sim back, so a hardcoded figure tests the fixture rather
+  // than the field.
+  check('remaining equals horizon minus the current tick', mine!.you.ticksRemaining ?? -1, 40 - sim.tick);
+  const before = mine!.you.ticksRemaining ?? -1;
+  await sim.step(capture);
+  check('it counts down by one per tick', (mine!.you.ticksRemaining ?? -1) - before, -1);
+  // A seat reading a negative remainder would conclude the run had already
+  // ended, which is a stranger state than zero.
+  sim.config.horizon = 1;
+  await sim.step(capture);
+  check('never negative past the horizon', mine!.you.ticksRemaining ?? -1, 0);
 }
 
 // Case 5 — the fairness layer. Every action is re-validated locally whatever

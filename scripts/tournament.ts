@@ -43,6 +43,11 @@ const budget = Number(arg('budget', '2000000')); // tokens per LLM seat per run
 // killed run resumes at rotation granularity.
 const outDirArg = arg('outDir', '');
 const startRotation = Number(arg('startRotation', '0'));
+// --horizon tells every seat how many ticks remain (#35). Off by default: every
+// tournament to date was played by seats that did not know when the game ended,
+// and a known deadline is expected to change late-run behaviour on its own.
+// Only meaningful as one arm of a paired run against an otherwise identical one.
+const discloseHorizon = process.argv.includes('--horizon');
 
 interface SeatResult {
   spec: string;
@@ -81,6 +86,7 @@ interface RunResult {
 async function runOne(rotation: number, scenario: Scenario | undefined, outDir: string): Promise<RunResult> {
   const cfg = scenario ? configForScenario(scenario) : defaultConfig(Number(arg('seed', '20260725')));
   cfg.opportunistCount = 0;
+  if (discloseHorizon) cfg.horizon = ticks;
   const sim = new Simulation(cfg, scenario);
   if (lineup.length !== sim.cities.length) {
     throw new Error(`lineup has ${lineup.length} seats but the world has ${sim.cities.length} cities`);
@@ -306,6 +312,7 @@ async function main(): Promise<void> {
   console.log(`POLIS tournament — ${rotations} rotation(s) × ${ticks} ticks`);
   console.log(`world: ${scenario ? `${scenario.name} (seed ${scenario.seed})` : `procedural seed ${arg('seed', '20260725')}`}`);
   console.log(`lineup: ${lineup.join('  ')}`);
+  console.log(`horizon: ${discloseHorizon ? `DISCLOSED — seats see ticksRemaining (#35)` : 'hidden (default)'}`);
   console.log(`output: ${outDir}`);
 
   const results: RunResult[] = [];
@@ -368,7 +375,7 @@ async function main(): Promise<void> {
   fs.writeFileSync(
     path.join(outDir, 'summary.json'),
     JSON.stringify(
-      { scenario: scenario?.name, seed: scenario?.seed, lineup, ticks, rotations, summary, totalCost },
+      { scenario: scenario?.name, seed: scenario?.seed, lineup, ticks, rotations, horizonDisclosed: discloseHorizon, summary, totalCost },
       null,
       2,
     ) + '\n',

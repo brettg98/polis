@@ -155,6 +155,10 @@ export interface SeatObservation {
     // population, was not — so seats optimised the price they could see. It
     // scales with population, so it is a live number rather than a constant.
     growthFloor: number;
+    // Ticks left in the run, present only when the run discloses its horizon
+    // (#35). Absent by default, which is the condition every tournament to date
+    // was played under.
+    ticksRemaining?: number;
     unrest: number;
     status: CityStatus;
     ticksUntilShortage: Partial<Record<Resource, number>>;

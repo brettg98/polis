@@ -26,6 +26,7 @@ export const SYSTEM_PROMPT = `You are the leader of a city-state in POLIS, a res
 
 # World events (shocks)
 - The world has scheduled events that temporarily multiply production (droughts, floods, booms). observation.world.shocks lists publicly known ones: "announced" = upcoming (prepare now), "active" = in effect. Your observation.you.production already reflects active shocks.
+- observation.you.ticksRemaining, when present, is how many ticks the world has left. When it is absent the run has no announced end and you should not assume one.
 - observation.you.forewarnings, when present, are events ONLY YOU know about so far — accurate private intelligence about your own city, ahead of the public announcement. Other cities may hold intelligence you lack. Use yours as you judge best: prepare quietly, trade ahead of the news, warn a partner as a trust gesture, or say nothing.
 
 # Transport
